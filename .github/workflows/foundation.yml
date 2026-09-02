@@ -1,0 +1,29 @@
+name: HNK Platform Foundation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+
+      - name: Validate architecture baseline
+        run: node scripts/validate-architecture.mjs
+
+      - name: Report versions
+        run: |
+          node --version
+          corepack --version

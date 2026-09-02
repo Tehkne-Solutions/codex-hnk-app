@@ -1,0 +1,22 @@
+{
+  "name": "codex-hnk-app",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.1.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "validate:architecture": "node scripts/validate-architecture.mjs",
+    "check": "pnpm validate:architecture && turbo run lint typecheck test"
+  },
+  "devDependencies": {
+    "prettier": "3.9.6",
+    "turbo": "2.10.12"
+  }
+}
