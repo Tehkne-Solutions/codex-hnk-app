@@ -1,0 +1,9 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: #08090c; color: #fffdf4; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.studio { max-width: 1120px; margin: 0 auto; padding: 64px 28px; }
+.eyebrow { color: #a99654; letter-spacing: .22em; font-size: 12px; }
+h1 { font-size: clamp(42px, 7vw, 82px); margin: 14px 0 48px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.card { min-height: 160px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 22px; border: 1px solid #292b31; background: #101116; }
+.card span { color: #8d8f96; }
+.card strong { color: #f6e7a1; font-size: 24px; }
