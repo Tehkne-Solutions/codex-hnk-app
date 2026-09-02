@@ -1,12 +1,18 @@
 # HNK VISUAL BIBLE
 
-Status: **Exploração v0.1 — não congelada**
+Status: **Kether Direction V1 — FROZEN / Global System evolving**
 
-Esta versão define princípios e critérios. Paletas finais, tipografia, símbolos, personagens e key arts somente passam a ser canônicos após aprovação visual explícita.
+A direção visual de Kether está congelada pelo contrato `docs/experience/kether/HNK_KETHER_FREEZE_V1.md`.
+
+O congelamento cobre linguagem, princípios, hierarquia, comportamento, gramática espacial e direção estética. Paletas finais, famílias tipográficas, símbolos específicos, key arts e assets individuais continuam sujeitos ao fluxo formal de aprovação/provenance antes de serem publicados.
 
 ## 1. Norte visual
 
-A plataforma deve parecer um **sistema operacional iniciático contemporâneo**, não um template genérico de app esotérico.
+Nome oficial da direção de Kether V1:
+
+**HNK SACRED EDITORIAL FANTASY**
+
+A plataforma deve parecer um **sistema operacional iniciático contemporâneo apresentado como códice vivo, publicação editorial premium e artefato sagrado navegável**, não um template genérico de app esotérico.
 
 Palavras-chave:
 - sagrado;
@@ -17,7 +23,12 @@ Palavras-chave:
 - precisão ritual;
 - interface de instrumento;
 - códice vivo;
-- cosmologia navegável.
+- cosmologia navegável;
+- editorial premium;
+- fantasia cinematográfica original HNK;
+- tecnologia ancestral impossível.
+
+Referências conceituais podem informar atmosfera, mas o resultado não deve copiar linguagem visual identificável de propriedades existentes.
 
 ## 2. Base já presente no projeto
 
@@ -27,9 +38,23 @@ O onboarding original prevê:
 - Árvore da Vida acendendo em WebGL;
 - progressão visual por trilhas e Sephiroth.
 
-Essa linguagem é tratada como ponto de partida, não como limitação estética final.
+A arquitetura aprovada do Codex Digital acrescenta:
+- O ÁTRIO como home;
+- CTA `ABRIR O PORTAL`;
+- grid conceitual de 12 colunas;
+- geometria sagrada como estrutura funcional;
+- 12 movimentos experienciais;
+- 12 arquétipos de interface;
+- Relic Moment por Dia;
+- progresso por anéis/nós/fragmentos em vez de barra percentual convencional;
+- estrutura editorial rígida invisível sob uma experiência viva.
 
 ## 3. Princípios
+
+### Estrutura rígida / experiência viva
+A matemática editorial e de produto governa o sistema sem aparecer como layout mecânico repetitivo.
+
+**ESTRUTURA RÍGIDA POR BAIXO. EXPERIÊNCIA VIVA POR CIMA.**
 
 ### Escuridão funcional
 Fundos escuros devem criar profundidade e foco, não reduzir legibilidade.
@@ -42,6 +67,9 @@ Glow não é decoração gratuita. Deve comunicar:
 - concluído;
 - transição.
 
+### Ouro como material
+Ouro deve comportar-se como metal, luz, pátina, gravação ou emissão — não como simples amarelo usado em bordas de UI.
+
 ### Geometria legível
 Círculos, linhas, portais, árvore, selos e diagramas devem continuar claros em telas pequenas.
 
@@ -50,6 +78,12 @@ Nenhuma representação visual deve elevar operador, anjo, símbolo, tecnologia 
 
 ### Fenômeno ≠ prova
 Efeitos de luz e motion podem representar estados do modelo HNK, sem funcionar como alegação científica de mecanismo externo.
+
+### Não-fantasia decorativa
+O produto pode ser fantástico, ritual e cinematográfico, mas não pode sacrificar leitura, segurança, acessibilidade ou operação diária.
+
+### Não-SaaS genérico
+Cards retangulares com borda dourada não constituem identidade HNK. A composição deve nascer de cosmologia, matéria, profundidade, manuscrito, instrumentos e transformação.
 
 ## 4. Sistemas visuais a desenvolver
 
@@ -77,7 +111,8 @@ Efeitos de luz e motion podem representar estados do modelo HNK, sem funcionar c
 - progress rings;
 - quests;
 - debuffs/alerts;
-- conclusão de portal.
+- conclusão de portal;
+- Fragmentos da Coroa para Kether.
 
 ### Instrumentos
 - Sintonizador;
@@ -86,12 +121,14 @@ Efeitos de luz e motion podem representar estados do modelo HNK, sem funcionar c
 - Árvore da Vida;
 - cards do Codex;
 - timer;
-- controles de sessão.
+- controles de sessão;
+- Acoustic Lab quando canonicamente exigido;
+- módulos espaciais/AR quando canonicamente exigidos.
 
 ### Oráculos
 Tarot, Runas e I-Ching precisam ser reconhecíveis como famílias relacionadas, mas não visualmente confundidos entre si.
 
-## 5. Kether — direção inicial
+## 5. Kether — direção congelada
 
 Kether deve transmitir:
 - coroa;
@@ -101,16 +138,23 @@ Kether deve transmitir:
 - silêncio;
 - início;
 - potencial;
-- geometria primordial.
+- geometria primordial;
+- emanação progressiva.
 
-Base exploratória:
+Base:
 - preto profundo;
 - branco/luz intensa;
-- ouro como acento de autoridade/integração;
-- azul ritual quando indicado pelo próprio conteúdo;
+- ouro como material e acento de autoridade/integração;
+- azul ritual somente quando indicado pelo conteúdo/aprovação;
 - partículas mínimas e intencionais.
 
-Nenhuma cor acima é token final até o Design System ser aprovado.
+Regra de composição:
+
+**menos em Kether significa cosmogonia, não minimalismo genérico.**
+
+O Day 001 começa quase sem interface e permite que a complexidade nasça na ordem em que o universo do Codex se manifesta.
+
+Paleta/token final continua dependente de Design System formal. A direção acima não está aberta a mudança estrutural durante o vertical slice sem decisão explícita de produto.
 
 ## 6. Interface
 
@@ -119,7 +163,15 @@ A UI deve evitar dois extremos:
 1. **fantasia excessiva**, que prejudica uso diário;
 2. **SaaS genérico**, que destrói identidade.
 
-Objetivo: HUD ritual + produto premium contemporâneo.
+Objetivo: **Sacred Editorial Fantasy + HUD ritual + produto premium contemporâneo**.
+
+### Profundidade
+- Z0 atmosfera;
+- Z1 arquitetura;
+- Z2 conteúdo;
+- Z3 artefatos/interação;
+- Z4 HUD;
+- Z5 feedback somente quando necessário.
 
 ### Cards do Dia
 Devem mostrar rapidamente:
@@ -132,10 +184,16 @@ Devem mostrar rapidamente:
 - duração/complexidade quando disponível.
 
 ### Hoje
-É a tela mais importante do produto e deve ter menor carga cognitiva que a Árvore da Vida.
+É a tela funcional mais importante do produto e deve ter menor carga cognitiva que a Árvore da Vida.
+
+### O Átrio
+É a entrada narrativa/cosmológica persistente da plataforma. O CTA principal é `ABRIR O PORTAL`.
 
 ### Árvore
 É a grande visão de progressão. Pode começar em 2.5D; 3D completo é fase posterior.
+
+### Progresso
+Evitar barra percentual como linguagem primária. Preferir anéis, geometria, nós da Árvore, Fragmentos da Coroa e contagem (`1/36`, `7/7`, `36/36`).
 
 ## 7. Motion
 
@@ -145,11 +203,29 @@ Motion comunica transformação:
 - portal abrindo;
 - sigilo entrando em foco;
 - ciclo concluído;
-- Level ascendido.
+- Level ascendido;
+- geometria sendo traçada;
+- elemento emanando do vazio.
 
-Evitar animações contínuas agressivas durante leitura, respiração ou introspecção.
+Motion deve orientar, revelar, responder, transformar, recompensar e respirar.
 
-## 8. Imagem gerativa
+Kether **emana**; não deve depender de slides/transições genéricas para revelar sua cosmologia.
+
+Evitar animações contínuas agressivas durante leitura, respiração, oração ou introspecção.
+
+Reduced motion é obrigatório.
+
+## 8. Tipografia
+
+Três vozes funcionais estão congeladas:
+
+1. **Sagrada / Display** — títulos, passagens, selos e revelações;
+2. **Editorial / Body** — leitura longa do Codex;
+3. **Sistema / Grotesk ou Mono** — HUD, dados, métricas e instrumentos.
+
+As famílias finais ainda exigem aprovação e tokenização.
+
+## 9. Imagem gerativa
 
 Todo brief de geração precisa separar:
 
@@ -168,26 +244,43 @@ Referências canônicas que devem permanecer estáveis.
 ### Uso
 Hero, thumbnail, background, diagram, motion source etc.
 
-## 9. Critérios de aprovação
+Nenhuma geração isolada de chat vira asset canônico automaticamente. Asset aprovado precisa de provenance, versão, checksum e estado `published` no registry.
 
-Uma direção visual é aprovada apenas se funcionar em:
+## 10. Relic Moment
+
+Cada Dia de Kether deve possuir um momento identificável e memorável — visual, interativo, sonoro, espacial ou material — sem inventar doutrina ou símbolo.
+
+O Relic Moment é uma regra de experiência, não obrigação de criar um hero ilustrado diferente para todos os 36 Dias.
+
+## 11. Critérios de aprovação
+
+Uma direção/asset visual é aprovada apenas se funcionar em:
 - mobile 390px;
 - thumbnail pequena;
 - tema escuro;
 - tela de leitura;
 - Árvore/Mapa;
 - acessibilidade básica de contraste;
+- reduced motion quando aplicável;
 - produção em série.
 
-## 10. Próxima etapa visual
+Também deve:
+- preservar conteúdo canônico;
+- não adicionar operador/símbolo não aprovado;
+- possuir provenance suficiente;
+- manter coerência com `HNK_KETHER_FREEZE_V1.md`.
 
-Produzir três **direções conceituais completas para Kether**, cada uma contendo:
-- tela Hoje;
-- card de Dia;
-- key art de Kether;
-- node da Árvore;
-- player;
-- diário;
-- portal 36.
+## 12. Próxima etapa visual
 
-Escolher uma direção ou combinar elementos explicitamente. Só depois iniciar produção em lote dos Dias 1–36.
+A fase de escolher entre direções conceituais de Kether está encerrada.
+
+A sequência agora é:
+
+1. tokenizar a direção `HNK SACRED EDITORIAL FANTASY`;
+2. fechar as três vozes tipográficas;
+3. construir Day 001 em UI real mobile/web;
+4. validar o sistema em 390px, leitura e reduced motion;
+5. produzir/registrar assets fundacionais;
+6. escalar por ciclo, não por geração solta de 36 telas;
+7. congelar `KETHER_ASSET_SET_V1` somente após assets `approved/published`;
+8. executar Portal 036 e QA de release.
