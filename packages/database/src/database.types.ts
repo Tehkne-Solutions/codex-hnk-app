@@ -222,6 +222,7 @@ export type Database = {
           completed_at: string;
           completion_version: string;
           day: number;
+          first_completion_session_id: string | null;
           local_record_hash: string | null;
           updated_at: string;
           user_id: string;
@@ -231,18 +232,28 @@ export type Database = {
           completed_at?: string;
           completion_version?: string;
           day: number;
+          first_completion_session_id?: string | null;
           local_record_hash?: string | null;
           updated_at?: string;
           user_id: string;
         };
         Update: Partial<Database["public"]["Tables"]["day_completions"]["Insert"]>;
-        Relationships: [{
-          foreignKeyName: "day_completions_day_fkey";
-          columns: ["day"];
-          isOneToOne: false;
-          referencedRelation: "codex_days";
-          referencedColumns: ["day"];
-        }];
+        Relationships: [
+          {
+            foreignKeyName: "day_completions_day_fkey";
+            columns: ["day"];
+            isOneToOne: false;
+            referencedRelation: "codex_days";
+            referencedColumns: ["day"];
+          },
+          {
+            foreignKeyName: "day_completions_first_completion_session_id_fkey";
+            columns: ["first_completion_session_id"];
+            isOneToOne: false;
+            referencedRelation: "practice_sessions";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       journal_vault: {
         Row: {
@@ -282,6 +293,50 @@ export type Database = {
           referencedColumns: ["day"];
         }];
       };
+      practice_sessions: {
+        Row: {
+          app_version: string | null;
+          client_session_id: string;
+          created_at: string;
+          day: number;
+          duration_seconds: number | null;
+          ended_at: string | null;
+          evidence: Json;
+          id: string;
+          local_record_hash: string | null;
+          metrics: Json;
+          mode: string;
+          started_at: string;
+          state: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          app_version?: string | null;
+          client_session_id: string;
+          created_at?: string;
+          day: number;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          evidence?: Json;
+          id?: string;
+          local_record_hash?: string | null;
+          metrics?: Json;
+          mode?: string;
+          started_at?: string;
+          state?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["practice_sessions"]["Insert"]>;
+        Relationships: [{
+          foreignKeyName: "practice_sessions_day_fkey";
+          columns: ["day"];
+          isOneToOne: false;
+          referencedRelation: "codex_days";
+          referencedColumns: ["day"];
+        }];
+      };
       profiles: {
         Row: {
           avatar_path: string | null;
@@ -311,7 +366,8 @@ export type Database = {
           current_chapter: number;
           current_day: number;
           current_sephira: string;
-          level: number;
+          initiatory_grade: number;
+          initiatory_title: string;
           streak_days: number;
           updated_at: string;
           user_id: string;
@@ -321,7 +377,8 @@ export type Database = {
           current_chapter?: number;
           current_day?: number;
           current_sephira?: string;
-          level?: number;
+          initiatory_grade?: number;
+          initiatory_title?: string;
           streak_days?: number;
           updated_at?: string;
           user_id: string;
@@ -362,7 +419,21 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      complete_codex_day: {
+        Args: {
+          p_client_completed_at?: string;
+          p_day: number;
+          p_local_record_hash?: string;
+          p_session_id: string;
+        };
+        Returns: Json;
+      };
+      get_kether_crown_state: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
