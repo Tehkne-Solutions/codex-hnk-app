@@ -126,19 +126,19 @@ select ok(
 set local role authenticated;
 set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select throws_ok(
-  $$select public.complete_codex_day(2, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb0002'::uuid, null, now())$$,
+  $$select public.complete_codex_day(2::smallint, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb0002'::uuid, null, now())$$,
   'P0001',
   'previous_day_required',
   'DAY-002 first completion requires previous Day'
 );
 select throws_ok(
-  $$select public.complete_codex_day(1, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb0001'::uuid, null, now())$$,
+  $$select public.complete_codex_day(1::smallint, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb0001'::uuid, null, now())$$,
   'P0001',
   'practice_session_not_ready',
   'DAY-005 ACTIVE session cannot seal as first completion'
 );
 select throws_ok(
-  $$select public.complete_codex_day(1, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb0003'::uuid, null, now())$$,
+  $$select public.complete_codex_day(1::smallint, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb0003'::uuid, null, now())$$,
   'P0001',
   'evidence_required',
   'DAY-005 first completion rejects empty evidence'
@@ -147,7 +147,7 @@ select throws_ok(
 -- User A valid first completion and revisit.
 set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select is(
-  (public.complete_codex_day(1, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa0001'::uuid, 'hash-a1', now()) ->> 'first_completion')::boolean,
+  (public.complete_codex_day(1::smallint, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa0001'::uuid, 'hash-a1', now()) ->> 'first_completion')::boolean,
   true,
   'DAY-006 valid evidence-pending session seals first completion'
 );
@@ -167,7 +167,7 @@ select is(
   'XP-004 xp_total reflects the awarded canonical XP once'
 );
 select is(
-  (public.complete_codex_day(1, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa0002'::uuid, 'hash-a1-r', now()) ->> 'xp_awarded')::integer,
+  (public.complete_codex_day(1::smallint, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa0002'::uuid, 'hash-a1-r', now()) ->> 'xp_awarded')::integer,
   0,
   'XP-006 revisit awards zero canonical XP'
 );
@@ -209,7 +209,7 @@ select is(
 
 -- Structural Portal evidence must be enforced by backend, not UI only.
 select throws_ok(
-  $$select public.complete_codex_day(36, 'cccccccc-cccc-cccc-cccc-cccccccc0001'::uuid, 'bad-portal', now())$$,
+  $$select public.complete_codex_day(36::smallint, 'cccccccc-cccc-cccc-cccc-cccccccc0001'::uuid, 'bad-portal', now())$$,
   'P0001',
   'kether_portal_evidence_incomplete',
   'P36-012 structurally incomplete Portal evidence is rejected'
@@ -220,7 +220,7 @@ select is(
   'P36-012 rejected Portal leaves no Day 036 completion side effect'
 );
 select throws_ok(
-  $$select public.complete_codex_day(36, 'cccccccc-cccc-cccc-cccc-cccccccc0002'::uuid, 'portal-no-vault', now())$$,
+  $$select public.complete_codex_day(36::smallint, 'cccccccc-cccc-cccc-cccc-cccccccc0002'::uuid, 'portal-no-vault', now())$$,
   'P0001',
   'kether_portal_journal_required',
   'P36-012 structurally valid Portal still requires encrypted Day 036 Vault update'
@@ -237,7 +237,7 @@ values (
 );
 
 select is(
-  (public.complete_codex_day(36, 'cccccccc-cccc-cccc-cccc-cccccccc0002'::uuid, 'portal-valid', now()) ->> 'xp_awarded')::integer,
+  (public.complete_codex_day(36::smallint, 'cccccccc-cccc-cccc-cccc-cccccccc0002'::uuid, 'portal-valid', now()) ->> 'xp_awarded')::integer,
   500,
   'P36-013 valid Day 036 awards exactly +500 XP'
 );
@@ -254,7 +254,7 @@ select ok(
   'P36-018 Chokmah unlocks at Day 37 state without auto-completing Day 037'
 );
 select is(
-  (public.complete_codex_day(36, 'cccccccc-cccc-cccc-cccc-cccccccc0002'::uuid, 'portal-valid-retry', now()) ->> 'xp_awarded')::integer,
+  (public.complete_codex_day(36::smallint, 'cccccccc-cccc-cccc-cccc-cccccccc0002'::uuid, 'portal-valid-retry', now()) ->> 'xp_awarded')::integer,
   0,
   'P36-015 repeated Portal completion awards zero duplicate XP'
 );
