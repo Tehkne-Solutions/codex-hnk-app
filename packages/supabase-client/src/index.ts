@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@hnk/database';
 
+export * from './promotion-sync';
+
 export type HnkSupabaseClient = SupabaseClient<Database>;
 
 export function createHnkSupabaseClient(
