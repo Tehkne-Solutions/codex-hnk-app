@@ -60,11 +60,23 @@ jobs:
         with:
           version: latest
 
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+          jq --version
+
       - name: Start local Supabase
         run: supabase start
 
-      - name: Run Kether P0 database acceptance suite
+      - name: Run Kether P0 pgTAP acceptance suite
         run: supabase test db
+
+      - name: Run Kether P0 real concurrency proof
+        run: bash supabase/tests/kether_p0_concurrency.sh
 
       - name: Stop local Supabase
         if: always()
