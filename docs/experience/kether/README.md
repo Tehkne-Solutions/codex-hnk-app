@@ -25,6 +25,7 @@ The experience layer now covers:
 - XP versus Initiatory Grade separation;
 - Day 001 vertical slice;
 - Portal 036 boss / promotion contract;
+- Acceptance & QA contract for Days 001–036;
 - safety, privacy, accessibility and epistemic product rules.
 
 ---
@@ -64,6 +65,27 @@ Defines the quality bar for the complete daily flow before scaling implementatio
 Defines the final boss / rite of passage:
 
 `REUNIR → EXECUTAR → COMPARAR → REVISAR → TESTEMUNHAR → ATRAVESSAR`
+
+### Acceptance & QA
+
+`HNK_KETHER_ACCEPTANCE_QA_MATRIX.md`
+
+Defines stable acceptance-test IDs, severity, automation/manual layers, daily coverage, special module QA and RC1 exit criteria across:
+
+- canonical content integrity;
+- Day state machine;
+- Practice Records/evidence;
+- XP/idempotency;
+- Crown/Fragments;
+- Journal Vault/privacy;
+- safety/reversibility;
+- epistemic separation;
+- audio;
+- Acoustic Lab;
+- spatial AR;
+- accessibility;
+- offline/sync;
+- Portal 036 atomic promotion.
 
 ---
 
@@ -243,6 +265,7 @@ Kether Product Release is a different milestone and requires, at minimum:
 - Practice Record and canonical completion implemented;
 - Crown state implemented;
 - Portal promotion implemented;
+- Acceptance & QA Matrix executed with all P0 gates green;
 - mobile + web paths tested;
 - Vault/privacy tested;
 - accessibility tested;
