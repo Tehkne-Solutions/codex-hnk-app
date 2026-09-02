@@ -15,7 +15,10 @@ export type Database = {
       asset_registry: {
         Row: {
           approval_state: string;
+          approved_at: string | null;
+          approved_by: string | null;
           asset_key: string;
+          asset_version: number;
           checksum_sha256: string | null;
           created_at: string;
           day: number | null;
@@ -23,12 +26,16 @@ export type Database = {
           height: number | null;
           id: string;
           kind: string;
+          license: string;
           metadata: Json;
           model_version: string | null;
           negative_prompt: string | null;
           prompt: string | null;
+          prompt_ref: string | null;
+          published_at: string | null;
           reference_assets: string[];
           scope: string;
+          scope_id: string | null;
           seed: string | null;
           slot: string;
           source_tool: string | null;
@@ -38,7 +45,10 @@ export type Database = {
         };
         Insert: {
           approval_state?: string;
+          approved_at?: string | null;
+          approved_by?: string | null;
           asset_key: string;
+          asset_version?: number;
           checksum_sha256?: string | null;
           created_at?: string;
           day?: number | null;
@@ -46,12 +56,16 @@ export type Database = {
           height?: number | null;
           id?: string;
           kind: string;
+          license?: string;
           metadata?: Json;
           model_version?: string | null;
           negative_prompt?: string | null;
           prompt?: string | null;
+          prompt_ref?: string | null;
+          published_at?: string | null;
           reference_assets?: string[];
           scope?: string;
+          scope_id?: string | null;
           seed?: string | null;
           slot: string;
           source_tool?: string | null;
