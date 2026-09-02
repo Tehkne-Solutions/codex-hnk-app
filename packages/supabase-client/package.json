@@ -8,7 +8,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node -e \"console.log('supabase client package: no runtime tests yet')\"",
+    "test": "node --experimental-strip-types --test src/*.test.ts",
     "build": "tsc --noEmit"
   },
   "dependencies": {
