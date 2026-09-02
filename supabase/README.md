@@ -1,18 +1,5 @@
-# supabase
+# Supabase sync notes
 
-Infraestrutura Supabase da plataforma HNK.
+The remote Supabase project is a projection of the canonical Codex repository. Do not edit canonical day prose directly in Supabase.
 
-Estrutura prevista:
-- `migrations/`
-- `functions/`
-- `seed/`
-
-Regras:
-- RLS em tabelas expostas;
-- nunca expor `service_role` no mobile/web;
-- Diário sincroniza ciphertext, não texto em claro;
-- migrations versionadas no GitHub;
-- alterações de schema devem ser verificadas antes do commit;
-- Storage começa como object storage oficial do MVP.
-
-O schema será criado depois da conexão do projeto Supabase ao repositório.
+Use `docs/HNK_CODEX_SYNC.md` for the sync contract and `supabase/sql/verify_kether_sync.sql` for integrity checks.

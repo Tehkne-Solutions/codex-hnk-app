@@ -1,0 +1,2 @@
+-- HNK Codex sync SQL files live here.
+-- These scripts require a privileged database connection; they are not app RPCs.
