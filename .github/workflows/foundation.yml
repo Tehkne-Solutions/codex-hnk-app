@@ -46,3 +46,26 @@ jobs:
         run: |
           node --version
           pnpm --version
+
+  kether-p0-db:
+    name: Kether P0 DB Acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Run Kether P0 database acceptance suite
+        run: supabase test db supabase/tests/kether_p0.sql
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
