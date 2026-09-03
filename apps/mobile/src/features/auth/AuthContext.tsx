@@ -6,7 +6,12 @@ import {
   useMemo,
   useState,
 } from 'react';
-import type { HnkSupabaseClient } from '@hnk/supabase-client';
+import { Platform } from 'react-native';
+import * as Linking from 'expo-linking';
+import {
+  parseAuthCallbackUrl,
+  type HnkSupabaseClient,
+} from '@hnk/supabase-client';
 import {
   hnkSupabase,
   hnkSupabaseConfigured,
@@ -33,6 +38,29 @@ const HnkAuthContext = createContext<HnkAuthState | null>(null);
 function normalizeError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return 'Não foi possível concluir a autenticação.';
+}
+
+function resolveAuthRedirectUrl(): string {
+  const explicit = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL?.trim();
+  if (explicit) return explicit;
+
+  if (Platform.OS === 'web') {
+    const location = (globalThis as { location?: { origin?: string } }).location;
+    if (location?.origin) return location.origin;
+  }
+
+  return Linking.createURL('auth/callback');
+}
+
+function clearWebAuthCallbackUrl(): void {
+  if (Platform.OS !== 'web') return;
+
+  const browser = globalThis as {
+    location?: { pathname?: string };
+    history?: { replaceState(data: unknown, unused: string, url?: string): void };
+  };
+
+  browser.history?.replaceState(null, '', browser.location?.pathname ?? '/');
 }
 
 export function HnkAuthProvider({ children }: PropsWithChildren) {
@@ -77,6 +105,63 @@ export function HnkAuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!hnkSupabase) return;
+    const client = hnkSupabase;
+    let active = true;
+
+    async function consumeAuthCallback(url: string): Promise<void> {
+      const callback = parseAuthCallbackUrl(url);
+      if (!callback || !active) return;
+
+      if (callback.kind === 'error') {
+        setMessage(callback.message);
+        setPhase('signed-out');
+        clearWebAuthCallbackUrl();
+        return;
+      }
+
+      try {
+        if (callback.kind === 'tokens') {
+          const { error } = await client.auth.setSession({
+            access_token: callback.accessToken,
+            refresh_token: callback.refreshToken,
+          });
+          if (error) throw error;
+        } else {
+          const { error } = await client.auth.exchangeCodeForSession(callback.code);
+          if (error) throw error;
+        }
+
+        if (active) setMessage(null);
+      } catch (error) {
+        if (active) {
+          setMessage(normalizeError(error));
+          setPhase('signed-out');
+        }
+      } finally {
+        clearWebAuthCallbackUrl();
+      }
+    }
+
+    void Linking.getInitialURL()
+      .then((url) => {
+        if (url) return consumeAuthCallback(url);
+      })
+      .catch((error) => {
+        if (active) setMessage(normalizeError(error));
+      });
+
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      void consumeAuthCallback(url);
+    });
+
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
+
   const value = useMemo<HnkAuthState>(() => ({
     phase,
     configured: hnkSupabaseConfigured,
@@ -103,13 +188,16 @@ export function HnkAuthProvider({ children }: PropsWithChildren) {
       const { data, error } = await hnkSupabase.auth.signUp({
         email: inputEmail.trim(),
         password,
+        options: {
+          emailRedirectTo: resolveAuthRedirectUrl(),
+        },
       });
       if (error) {
         setMessage(error.message);
         throw error;
       }
       if (!data.session) {
-        setMessage('Conta criada. Confirme o e-mail e depois retorne ao Átrio para entrar.');
+        setMessage('Conta criada. Confirme o e-mail; o link retornará ao Átrio para concluir a sessão.');
       }
     },
     async signOut() {
