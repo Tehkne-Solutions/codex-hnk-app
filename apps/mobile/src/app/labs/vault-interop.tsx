@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { File, Paths } from 'expo-file-system';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   runNativeVaultInteropVector,
@@ -6,6 +7,30 @@ import {
 } from '../../features/vault/NativeVaultInteropHarness';
 
 const AUTO_RUN = process.env.EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN === '1';
+const CI_PROOF_FILENAME = 'hnk-native-interop-proof-v1.json';
+const CI_PROOF_SCHEMA = 'hnk-native-interop-proof-v1';
+
+interface NativeInteropCiProof {
+  schema: typeof CI_PROOF_SCHEMA;
+  platform: string;
+  vector?: string;
+  status: 'PASS' | 'FAIL' | 'NATIVE_DEVICE_REQUIRED';
+  checks: Array<{ name: string; ok: boolean }>;
+  errorCode?: string;
+  secretsCaptured: false;
+}
+
+function sanitizeErrorCode(value: string): string {
+  const normalized = value.toLowerCase().replace(/[^a-z0-9_-]+/g, '_').slice(0, 80);
+  return normalized || 'native_vault_interop_failed';
+}
+
+async function persistCiProof(proof: NativeInteropCiProof): Promise<void> {
+  if (!AUTO_RUN || (Platform.OS !== 'android' && Platform.OS !== 'ios')) return;
+  const file = new File(Paths.document, CI_PROOF_FILENAME);
+  file.create({ overwrite: true, intermediates: true });
+  await file.write(JSON.stringify(proof));
+}
 
 export default function NativeVaultInteropLabRoute() {
   const [result, setResult] = useState<NativeVaultInteropResult | null>(null);
@@ -17,10 +42,34 @@ export default function NativeVaultInteropLabRoute() {
     setBusy(true);
     setError(null);
     try {
-      setResult(await runNativeVaultInteropVector());
+      const nextResult = await runNativeVaultInteropVector();
+      setResult(nextResult);
+      await persistCiProof({
+        schema: CI_PROOF_SCHEMA,
+        platform: nextResult.platform,
+        vector: nextResult.vectorId,
+        status: nextResult.status,
+        checks: nextResult.checks.map((check) => ({ name: check.name, ok: check.ok })),
+        secretsCaptured: false,
+      });
     } catch (reason) {
+      const errorCode = sanitizeErrorCode(
+        reason instanceof Error ? reason.message : 'native_vault_interop_failed',
+      );
       setResult(null);
-      setError(reason instanceof Error ? reason.message : 'native_vault_interop_failed');
+      setError(errorCode);
+      try {
+        await persistCiProof({
+          schema: CI_PROOF_SCHEMA,
+          platform: Platform.OS,
+          status: 'FAIL',
+          checks: [],
+          errorCode,
+          secretsCaptured: false,
+        });
+      } catch {
+        // The CI runner will fail closed when the redacted proof file is absent.
+      }
     } finally {
       setBusy(false);
     }
