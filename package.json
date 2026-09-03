@@ -14,9 +14,11 @@
     "test": "turbo run test",
     "validate:architecture": "node scripts/validate-architecture.mjs",
     "validate:boards": "node scripts/validate-boards.mjs",
+    "export:board": "node scripts/export-board.mjs",
     "check": "pnpm validate:architecture && pnpm validate:boards && turbo run lint typecheck test"
   },
   "devDependencies": {
+    "playwright": "1.55.0",
     "prettier": "3.9.6",
     "turbo": "2.10.12"
   }
