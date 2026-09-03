@@ -14,30 +14,53 @@ export function HnkBoardRenderer({ board }: HnkBoardRendererProps) {
         data-hnk-board-id={board.id}
         data-hnk-board-version={board.version}
       >
+        <div className={styles.architecture} aria-hidden="true">
+          <span className={styles.architectureAxis} />
+          <span className={styles.architectureRingOne} />
+          <span className={styles.architectureRingTwo} />
+        </div>
+
         <header className={styles.hero}>
-          <div>
+          <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>HNK · {board.family.toUpperCase()}</p>
+            <p className={styles.heroOrdinal}>I</p>
             <h1>{board.title}</h1>
             {board.subtitle ? <p className={styles.subtitle}>{board.subtitle}</p> : null}
             {board.rangeLabel ? <p className={styles.range}>{board.rangeLabel}</p> : null}
           </div>
-          <div className={styles.crown} aria-hidden="true">
-            <span />
+
+          <div className={styles.crownField} aria-hidden="true">
+            <div className={styles.crownOrbit crownOrbitOne} />
+            <div className={styles.crownOrbit crownOrbitTwo} />
+            <div className={styles.crownOrbit crownOrbitThree} />
+            <div className={styles.crownAxis} />
+            <div className={styles.crownOrigin} />
+            <div className={styles.crownRay crownRayLeft} />
+            <div className={styles.crownRay crownRayRight} />
           </div>
         </header>
 
-        <div className={styles.factGrid}>
-          {board.facts.map((fact) => (
+        <div className={styles.factConstellation} aria-label="Metadados do capítulo">
+          {board.facts.map((fact, index) => (
             <article className={styles.fact} key={`${fact.label}-${fact.value}`}>
-              <p>{fact.label}</p>
-              <strong>{fact.value}</strong>
+              <span className={styles.factIndex}>{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <p>{fact.label}</p>
+                <strong>{fact.value}</strong>
+              </div>
             </article>
           ))}
         </div>
 
-        <div className={styles.sectionGrid}>
-          {board.sections.map((section) => (
-            <article className={styles.panel} key={section.id}>
+        <div className={styles.editorialField}>
+          {board.sections.map((section, index) => (
+            <article
+              className={`${styles.panel} ${index === 0 ? styles.panelPrimary : ''} ${
+                index === 1 ? styles.panelManuscript : ''
+              } ${index === 2 ? styles.panelRpg : ''}`}
+              key={section.id}
+            >
+              <span className={styles.panelOrdinal}>{String(index + 1).padStart(2, '0')}</span>
               {section.eyebrow ? <p className={styles.panelEyebrow}>{section.eyebrow}</p> : null}
               <h2>{section.title}</h2>
               {section.body ? <p className={styles.body}>{section.body}</p> : null}
@@ -65,23 +88,32 @@ export function HnkBoardRenderer({ board }: HnkBoardRendererProps) {
         {board.cycles?.length ? (
           <section className={styles.cycles} aria-labelledby={`${board.id}-cycles-title`}>
             <div className={styles.sectionHeading}>
-              <p className={styles.panelEyebrow}>Progressão</p>
-              <h2 id={`${board.id}-cycles-title`}>Ciclos do capítulo</h2>
+              <p className={styles.panelEyebrow}>Progressão · 7 Fragmentos</p>
+              <h2 id={`${board.id}-cycles-title`}>A Emanação da Coroa</h2>
+              <p className={styles.sectionIntro}>
+                Sete movimentos de cinco dias conduzem o Neófito até o limiar do Portal 036.
+              </p>
             </div>
-            <div className={styles.cycleGrid}>
+
+            <div className={styles.cyclePath}>
+              <div className={styles.cycleSpine} aria-hidden="true" />
               {board.cycles.map((cycle) => (
                 <article className={styles.cycle} key={cycle.id}>
-                  <div className={styles.cycleNumber}>{String(cycle.index).padStart(2, '0')}</div>
-                  <div>
+                  <div className={styles.cycleNode} aria-hidden="true">
+                    <span>{String(cycle.index).padStart(2, '0')}</span>
+                  </div>
+                  <div className={styles.cycleCopy}>
                     <p className={styles.cycleMeta}>
                       {cycle.label} · Dias {cycle.days[0]}–{cycle.days[1]}
                     </p>
                     <h3>{cycle.title}</h3>
                     {cycle.focus ? <p>{cycle.focus}</p> : null}
-                    {cycle.attributes?.length ? (
-                      <p className={styles.attributes}>{cycle.attributes.join(' · ')}</p>
-                    ) : null}
-                    {cycle.xpLabel ? <p className={styles.xp}>{cycle.xpLabel}</p> : null}
+                    <div className={styles.cycleSystemLine}>
+                      {cycle.attributes?.length ? (
+                        <p className={styles.attributes}>{cycle.attributes.join(' · ')}</p>
+                      ) : null}
+                      {cycle.xpLabel ? <p className={styles.xp}>{cycle.xpLabel}</p> : null}
+                    </div>
                   </div>
                 </article>
               ))}
@@ -91,14 +123,20 @@ export function HnkBoardRenderer({ board }: HnkBoardRendererProps) {
 
         {board.portal ? (
           <section className={styles.portal}>
-            <div className={styles.portalMark} aria-hidden="true" />
-            <div>
+            <div className={styles.portalArchitecture} aria-hidden="true">
+              <span className={styles.portalOuter} />
+              <span className={styles.portalInner} />
+              <span className={styles.portalCore} />
+              <span className={styles.portalVertical} />
+              <span className={styles.portalHorizontal} />
+            </div>
+            <div className={styles.portalCopy}>
               <p className={styles.panelEyebrow}>Portal · Dia {board.portal.days.join(', ')}</p>
               <h2>{board.portal.title}</h2>
               {board.portal.destination ? (
                 <p className={styles.destination}>Destino: {board.portal.destination}</p>
               ) : null}
-              {board.portal.summary ? <p>{board.portal.summary}</p> : null}
+              {board.portal.summary ? <p className={styles.portalSummary}>{board.portal.summary}</p> : null}
             </div>
           </section>
         ) : null}
