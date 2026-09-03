@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import styles from './day001.module.css';
+import review from './day001-review.module.css';
 
 type Scene = {
   key: string;
@@ -46,13 +47,19 @@ export function Day001WebExperience() {
     scene.key === 'intention' ? intention.trim().length > 0 :
     scene.key === 'contract' ? contract :
     scene.key === 'mirror' ? mirror.trim().length > 0 : true;
+  const reviewSceneClass = scene.key === 'relic'
+    ? review.relicScene
+    : scene.key === 'atrium'
+      ? review.atriumScene
+      : '';
+  const reduceOrigin = scene.key === 'relic' || scene.key === 'atrium';
 
   function next() {
     setIndex((value) => Math.min(SCENES.length - 1, value + 1));
   }
 
   return (
-    <main className={styles.shell} data-hnk-theme="kether" data-scene={scene.key}>
+    <main className={`${styles.shell} ${review.shellReview}`} data-hnk-theme="kether" data-scene={scene.key}>
       {index >= 3 ? (
         <header className={styles.hud}>
           <div>
@@ -66,7 +73,7 @@ export function Day001WebExperience() {
         </header>
       ) : null}
 
-      <section className={styles.origin} aria-label="Geometria progressiva de Kether">
+      <section className={`${styles.origin} ${reduceOrigin ? review.originReduced : ''}`} aria-label="Geometria progressiva de Kether">
         {geometryLevel >= 2 ? <i className={styles.axis} /> : null}
         {geometryLevel >= 1 ? <i className={`${styles.ring} ${styles.ringOne}`} /> : null}
         {geometryLevel >= 3 ? <i className={`${styles.ring} ${styles.ringTwo}`} /> : null}
@@ -75,7 +82,7 @@ export function Day001WebExperience() {
         <i className={`${styles.point} ${geometryLevel > 0 ? styles.pointActive : ''}`} />
       </section>
 
-      <section className={`${styles.scene} ${index < 2 ? styles.sceneBare : ''}`}>
+      <section className={`${styles.scene} ${index < 2 ? styles.sceneBare : ''} ${reviewSceneClass}`}>
         <p className={styles.eyebrow}>{scene.eyebrow}</p>
         <h1>{scene.title}</h1>
         <p className={styles.body}>{scene.body}</p>
@@ -90,7 +97,7 @@ export function Day001WebExperience() {
         ) : null}
 
         {scene.key === 'relic' ? (
-          <div className={styles.relic} aria-label="Relic Moment de Kether">
+          <div className={`${styles.relic} ${review.relicStage}`} aria-label="Relic Moment de Kether">
             <i className={styles.relicAxis} />
             <i className={`${styles.relicRing} ${styles.relicOuter}`} />
             <i className={`${styles.relicRing} ${styles.relicInner}`} />
@@ -122,10 +129,10 @@ export function Day001WebExperience() {
         ) : null}
 
         {scene.key === 'tree' || scene.key === 'atrium' ? (
-          <div className={styles.tree} aria-label="Kether aceso na Árvore da Vida">
+          <div className={`${styles.tree} ${scene.key === 'atrium' ? review.treeStage : ''}`} aria-label="Kether aceso na Árvore da Vida">
             <i className={styles.treeStem} />
-            <i className={`${styles.treeBranch} ${styles.treeBranchLeft}`} />
-            <i className={`${styles.treeBranch} ${styles.treeBranchRight}`} />
+            <i className={`${review.treeBranch} ${review.treeBranchLeft}`} />
+            <i className={`${review.treeBranch} ${review.treeBranchRight}`} />
             <i className={`${styles.treeNode} ${styles.kether}`}><b /></i>
             <i className={`${styles.treeNode} ${styles.chokmah}`} />
             <i className={`${styles.treeNode} ${styles.binah}`} />
