@@ -87,7 +87,7 @@ jobs:
           cat /tmp/hnk-board-web.log
           exit 1
 
-      - name: Export PNG and PDF
+      - name: Export PNG, mobile PNG and PDF
         run: |
           pnpm export:board -- \
             --id "$BOARD_ID" \
@@ -98,8 +98,10 @@ jobs:
       - name: Verify export manifest
         run: |
           test -s "$BOARD_OUT/$BOARD_SLUG.png"
+          test -s "$BOARD_OUT/$BOARD_SLUG-mobile-390.png"
           test -s "$BOARD_OUT/$BOARD_SLUG.pdf"
           test -s "$BOARD_OUT/export-manifest.json"
+          grep -q '"target": "mobile-390"' "$BOARD_OUT/export-manifest.json"
           cat "$BOARD_OUT/export-manifest.json"
 
       - name: Upload board export artifact
@@ -108,6 +110,7 @@ jobs:
           name: hnk-${{ env.BOARD_ID }}
           path: |
             ${{ env.BOARD_OUT }}/${{ env.BOARD_SLUG }}.png
+            ${{ env.BOARD_OUT }}/${{ env.BOARD_SLUG }}-mobile-390.png
             ${{ env.BOARD_OUT }}/${{ env.BOARD_SLUG }}.pdf
             ${{ env.BOARD_OUT }}/export-manifest.json
             ${{ env.BOARD_OUT }}/README.md
