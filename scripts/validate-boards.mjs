@@ -9,6 +9,8 @@ const required = [
   'apps/web/app/boards/_components/HnkBoardRenderer.tsx',
   'apps/web/app/boards/_components/board-renderer.module.css',
   'apps/web/app/boards/kether/page.tsx',
+  'scripts/export-board.mjs',
+  '.github/workflows/board-export.yml',
 ];
 
 const missing = required.filter((path) => !existsSync(path));
@@ -22,12 +24,15 @@ const systemDoc = readFileSync('docs/design/HNK_BOARD_ARTIFACT_SYSTEM_V1.md', 'u
 const boardSource = readFileSync('packages/assets/src/boards/kether-chapter-overview.ts', 'utf8');
 const catalogSource = readFileSync('packages/assets/src/catalog.ts', 'utf8');
 const rendererSource = readFileSync('apps/web/app/boards/_components/HnkBoardRenderer.tsx', 'utf8');
+const exporterSource = readFileSync('scripts/export-board.mjs', 'utf8');
+const exportWorkflow = readFileSync('.github/workflows/board-export.yml', 'utf8');
 
 const invariants = [
   ['Board as Data decision', systemDoc.includes('Board as Data')],
   ['chapter-overview family', systemDoc.includes('chapter-overview')],
   ['stable Kether board id', boardSource.includes('kether-chapter-overview-v1')],
   ['structured lifecycle', boardSource.includes("lifecycle: 'structured'")],
+  ['lossless PNG board-img output', boardSource.includes('kether-chapter-overview.png')],
   ['board-img output', boardSource.includes("kind: 'board-img'")],
   ['board-doc output', boardSource.includes("kind: 'board-doc'")],
   ['board-code output', boardSource.includes("kind: 'board-code'")],
@@ -35,6 +40,11 @@ const invariants = [
   ['catalog contract assertion', catalogSource.includes('assertBoardContract')],
   ['renderer consumes HnkBoard', rendererSource.includes('board: HnkBoard')],
   ['renderer exposes accessibility alt', rendererSource.includes('board.accessibility.alt')],
+  ['renderer exposes stable export selector', rendererSource.includes('data-hnk-board-id')],
+  ['exporter emits PNG', exporterSource.includes("type: 'png'")],
+  ['exporter emits PDF', exporterSource.includes('page.pdf')],
+  ['exporter computes SHA-256', exporterSource.includes("createHash('sha256')")],
+  ['workflow uploads board artifact', exportWorkflow.includes('actions/upload-artifact@v4')],
 ];
 
 const failed = invariants.filter(([, ok]) => !ok);
