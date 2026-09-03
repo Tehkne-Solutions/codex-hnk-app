@@ -1,0 +1,88 @@
+.sourceNote,
+.localOnly,
+.runtimeError,
+.securityBoundary strong,
+.securityBoundary span,
+.signOut {
+  font-family: var(--hnk-font-system);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.sourceNote {
+  margin: var(--hnk-rhythm-24) 0 0;
+  color: var(--hnk-kether-text-muted);
+  font-size: 0.52rem;
+  line-height: 1.6;
+}
+
+.localOnly {
+  margin: var(--hnk-rhythm-6) 0 0;
+  color: var(--hnk-kether-text-muted);
+  font-size: 0.48rem;
+  line-height: 1.5;
+}
+
+.signOut {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--hnk-kether-text-muted);
+  font-size: 0.48rem;
+  cursor: pointer;
+}
+
+.signOut:hover,
+.signOut:focus-visible {
+  color: var(--hnk-kether-gold-material);
+}
+
+.securityBoundary {
+  margin-top: var(--hnk-rhythm-24);
+  padding: var(--hnk-rhythm-24);
+  border-left: 1px solid rgba(203, 176, 109, 0.66);
+  background: linear-gradient(90deg, rgba(203, 176, 109, 0.07), transparent 82%);
+}
+
+.securityBoundary strong {
+  display: block;
+  color: var(--hnk-kether-gold-bright);
+  font-size: 0.58rem;
+}
+
+.securityBoundary p {
+  max-width: 62ch;
+  margin: var(--hnk-rhythm-12) 0;
+  color: var(--hnk-kether-text-secondary);
+  font-family: var(--hnk-font-editorial-body);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.securityBoundary span {
+  color: var(--hnk-kether-text-muted);
+  font-size: 0.5rem;
+  line-height: 1.6;
+}
+
+.runtimeError {
+  margin: var(--hnk-rhythm-24) 0 0;
+  padding: var(--hnk-rhythm-12) 0;
+  border-top: 1px solid rgba(203, 176, 109, 0.2);
+  border-bottom: 1px solid rgba(203, 176, 109, 0.2);
+  color: var(--hnk-kether-text-secondary);
+  font-size: 0.54rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 640px) {
+  .securityBoundary {
+    padding: var(--hnk-rhythm-12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signOut {
+    transition: none;
+  }
+}
