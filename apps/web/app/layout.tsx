@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '@hnk/ui/styles/kether.css';
 
 export const metadata: Metadata = {
   title: 'HNK Codex',
