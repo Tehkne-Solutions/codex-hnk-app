@@ -1,13 +1,19 @@
 import type { HnkBoard } from '@hnk/assets';
 import styles from './board-renderer.module.css';
+import themeStyles from './kether-token-bridge.module.css';
 
 export interface HnkBoardRendererProps {
   board: HnkBoard;
 }
 
 export function HnkBoardRenderer({ board }: HnkBoardRendererProps) {
+  const ketherTheme = board.scopeId === 'kether';
+
   return (
-    <main className={styles.page}>
+    <main
+      className={`${styles.page} ${ketherTheme ? themeStyles.kether : ''}`}
+      data-hnk-theme={ketherTheme ? 'kether' : undefined}
+    >
       <section
         className={styles.board}
         aria-label={board.accessibility.alt}
