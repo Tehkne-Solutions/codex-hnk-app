@@ -4,6 +4,7 @@ const required = [
   'packages/vault-interop-vectors/package.json',
   'packages/vault-interop-vectors/src/index.ts',
   'apps/mobile/src/features/vault/NativeVaultInteropHarness.ts',
+  'apps/mobile/src/app/index.tsx',
   'apps/mobile/src/app/labs/vault-interop.tsx',
   '.github/workflows/vault-native-android-interop.yml',
   '.github/workflows/vault-native-ios-interop.yml',
@@ -21,6 +22,7 @@ if (missing.length) {
 
 const vector = readFileSync('packages/vault-interop-vectors/src/index.ts', 'utf8');
 const harness = readFileSync('apps/mobile/src/features/vault/NativeVaultInteropHarness.ts', 'utf8');
+const home = readFileSync('apps/mobile/src/app/index.tsx', 'utf8');
 const route = readFileSync('apps/mobile/src/app/labs/vault-interop.tsx', 'utf8');
 const androidWorkflow = readFileSync('.github/workflows/vault-native-android-interop.yml', 'utf8');
 const iosWorkflow = readFileSync('.github/workflows/vault-native-ios-interop.yml', 'utf8');
@@ -51,11 +53,14 @@ const invariants = [
   ['Native harness verifies decrypt round-trip', harness.includes("name: 'decrypt-roundtrip'")],
   ['Native harness has no SecureStore dependency', !harness.includes("from 'expo-secure-store'") && !harness.includes('SecureStore.')],
   ['Native harness has no Supabase/network dependency', !harness.includes('@hnk/supabase-client') && !harness.includes('fetch(')],
+  ['CI bootstrap redirects to the Lab only under explicit autorun', home.includes("process.env.EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN === '1'") && home.includes('<Redirect href="/labs/vault-interop" />') && home.includes('<AtriumGate>')],
+  ['CI bootstrap contains no vector or Vault implementation', !home.includes('@hnk/vault-interop-vectors') && !home.includes('NativeVaultInteropHarness') && !home.includes('vault-crypto')],
   ['Lab route is explicitly experimental and makes no Vault writes', route.includes('EXPERIMENTAL · NO VAULT WRITES')],
   ['Lab route CI autorun is gated to Android/iOS', route.includes('EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN') && route.includes("Platform.OS === 'android'") && route.includes("Platform.OS === 'ios'")],
   ['Lab route exposes redacted accessibility evidence', route.includes('native-interop-status-${result.status}') && route.includes("native-interop-check-${check.name}-${check.ok ? 'PASS' : 'FAIL'}")],
   ['Lab route writes a CI-only redacted proof file', route.includes("from 'expo-file-system'") && route.includes("CI_PROOF_FILENAME = 'hnk-native-interop-proof-v1.json'") && route.includes("CI_PROOF_SCHEMA = 'hnk-native-interop-proof-v1'") && route.includes('secretsCaptured: false')],
   ['Lab proof persists only redacted result fields', route.includes('checks: nextResult.checks.map') && route.includes('errorCode') && !route.includes('vdkHex') && !route.includes('ciphertextBase64') && !route.includes('nonceBase64') && !route.includes('recoveryRootSecret')],
+  ['Native proof workflows watch the CI bootstrap file', androidWorkflow.includes("'apps/mobile/src/app/index.tsx'") && iosWorkflow.includes("'apps/mobile/src/app/index.tsx'")],
   ['Android proof workflow pins emulator action commit', androidWorkflow.includes('ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d') && !androidWorkflow.includes('android-emulator-runner@v2')],
   ['Android proof workflow pins setup-java v5 commit', androidWorkflow.includes('actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961') && !androidWorkflow.includes('actions/setup-java@v4')],
   ['Android proof workflow delegates one command to versioned runner', androidWorkflow.includes('script: sh scripts/run-vault-native-android-interop.sh') && !androidWorkflow.includes('script: |')],
@@ -67,9 +72,10 @@ const invariants = [
   ['Android proof verifies all four frozen checks through native UI', frozenChecks.every((name) => androidRunner.includes(name)) && androidRunner.includes('uiautomator dump')],
   ['Android proof uploads only redacted proof surface', androidWorkflow.includes('hnk-native-vault-android-interop-v1') && androidRunner.includes('secrets-captured=NO') && !androidWorkflow.includes('vdkHex') && !androidRunner.includes('vdkHex') && !androidRunner.includes('recoveryRootSecret')],
   ['iOS proof uses the supported macOS 26 runner', iosWorkflow.includes('runs-on: macos-26')],
+  ['iOS proof workflow embeds explicit CI autorun', iosWorkflow.includes("EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN: '1'")],
   ['iOS proof workflow delegates to versioned POSIX runner', iosWorkflow.includes('run: sh scripts/run-vault-native-ios-interop.sh') && iosRunner.includes('#!/usr/bin/env sh') && iosRunner.includes('set -eu') && !iosRunner.includes('pipefail')],
   ['iOS proof builds a Release Simulator app without signing', iosRunner.includes('expo prebuild --platform ios --clean --no-install') && iosRunner.includes('pod install') && iosRunner.includes('-configuration Release') && iosRunner.includes('-sdk iphonesimulator') && iosRunner.includes('CODE_SIGNING_ALLOWED=NO')],
-  ['iOS proof installs and opens the exact native lab route', iosRunner.includes('xcrun simctl install') && iosRunner.includes("xcrun simctl openurl \"$udid\" 'hnk:///labs/vault-interop'") && iosRunner.includes("bundle_id='com.tehknesolutions.codexhnk'")],
+  ['iOS proof installs and launches the app without URL-confirmation automation', iosRunner.includes('xcrun simctl install') && iosRunner.includes('xcrun simctl launch') && !iosRunner.includes('simctl openurl') && iosRunner.includes("bundle_id='com.tehknesolutions.codexhnk'")],
   ['iOS proof is read from the app sandbox instead of visual OCR', iosRunner.includes('simctl get_app_container') && iosRunner.includes('Documents/$proof_filename') && iosRunner.includes('result.json')],
   ['iOS proof verifies all four frozen checks and rejects unknown fields', frozenChecks.every((name) => iosRunner.includes(name)) && iosRunner.includes('unexpected_top_level_proof_field') && iosRunner.includes('unexpected_check_field')],
   ['iOS proof captures a Simulator screenshot and SHA256 manifest', iosRunner.includes('simctl io') && iosRunner.includes('screen.png') && iosRunner.includes('shasum -a 256')],
