@@ -25,7 +25,6 @@ import { loadDay001Snapshot, type Day001Snapshot } from './day001-data';
 type MacroAct = 'limiar' | 'revelacao' | 'jachin' | 'boaz' | 'meio' | 'selo';
 type SyncState = 'idle' | 'starting' | 'sealing' | 'sealed' | 'demo' | 'error';
 type PracticeDurations = { jachin: number; boaz: number; middle: number };
-
 type SymbolKey = {
   id: 'louco' | 'fehu' | 'iching';
   mark: string;
@@ -113,7 +112,9 @@ export function Day001ImmersiveMobileVerticalSlice() {
     void loadDay001Snapshot(auth.accessToken ?? undefined).then((snapshot) => {
       if (active) setDay(snapshot);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [auth.accessToken]);
 
   useEffect(() => {
@@ -135,19 +136,15 @@ export function Day001ImmersiveMobileVerticalSlice() {
   const distractionsReady = distractions.every((value) => value.trim().length > 0);
   const middleReady = middleDone && intention.trim().length > 0 && mirror.trim().length > 0 && contractAccepted;
 
-  function go(next: MacroAct) {
-    setAct(next);
-  }
-
   async function beginPractice() {
     setSyncError(null);
     if (!isLive || !auth.client || !auth.userId) {
       setSyncState('demo');
-      go('revelacao');
+      setAct('revelacao');
       return;
     }
     if (practice) {
-      go('revelacao');
+      setAct('revelacao');
       return;
     }
 
@@ -161,7 +158,7 @@ export function Day001ImmersiveMobileVerticalSlice() {
       });
       setPractice(session);
       setSyncState('idle');
-      go('revelacao');
+      setAct('revelacao');
     } catch (error) {
       setSyncState('error');
       setSyncError(errorMessage(error));
@@ -269,11 +266,16 @@ export function Day001ImmersiveMobileVerticalSlice() {
         {syncError ? <ErrorNotice text={syncError} /> : null}
 
         {act === 'limiar' ? (
-          <ActField tone="threshold">
+          <Panel>
             <OriginCosmos reduceMotion={reduceMotion} />
             <Text style={styles.kicker}>I · LIMIAR</Text>
-            <Text style={styles.heroTitle}>Antes da forma,{`\n`}<Text style={styles.heroAccent}>uma possibilidade.</Text></Text>
-            <Text style={styles.heroBody}>Você não abriu uma lição. Você chegou ao primeiro limiar de Kether — a Coroa, em Atziluth, sob o ciclo de Vehuiah.</Text>
+            <Text style={styles.heroTitle}>
+              Antes da forma,{`\n`}
+              <Text style={styles.heroAccent}>uma possibilidade.</Text>
+            </Text>
+            <Text style={styles.heroBody}>
+              Você não abriu uma lição. Você chegou ao primeiro limiar de Kether — a Coroa, em Atziluth, sob o ciclo de Vehuiah.
+            </Text>
             <MetadataConstellation day={day} />
             <SyncBadge live={isLive} state={syncState} />
             <PrimaryAction
@@ -281,15 +283,23 @@ export function Day001ImmersiveMobileVerticalSlice() {
               onPress={() => void beginPractice()}
               disabled={syncState === 'starting'}
             />
-          </ActField>
+          </Panel>
         ) : null}
 
         {act === 'revelacao' ? (
-          <ActField tone="revelation">
-            <ActHeading eyebrow="II · REVELAÇÃO" title="Três chaves para compreender o começo." body="O Codex apresenta sua constelação simbólica antes da prática: começo, força fecundante e impulso criativo." />
+          <Panel>
+            <ActHeading
+              eyebrow="II · REVELAÇÃO"
+              title="Três chaves para compreender o começo."
+              body="O Codex apresenta sua constelação simbólica antes da prática: começo, força fecundante e impulso criativo."
+            />
             <View style={styles.symbolSelector}>
               {SYMBOL_KEYS.map((key) => (
-                <Pressable key={key.id} style={[styles.symbolKey, selectedKey === key.id && styles.symbolKeyActive]} onPress={() => setSelectedKey(key.id)}>
+                <Pressable
+                  key={key.id}
+                  style={[styles.symbolKey, selectedKey === key.id && styles.symbolKeyActive]}
+                  onPress={() => setSelectedKey(key.id)}
+                >
                   <Text style={styles.symbolMark}>{key.mark}</Text>
                   <View style={styles.symbolLabelWrap}>
                     <Text style={styles.symbolTitle}>{key.title}</Text>
@@ -303,26 +313,34 @@ export function Day001ImmersiveMobileVerticalSlice() {
               <Text style={styles.kicker}>CHAVE ATIVA</Text>
               <Text style={styles.symbolMeaningTitle}>{selectedSymbol.title}</Text>
               <Text style={styles.editorialBody}>{selectedSymbol.text}</Text>
-              <Text style={styles.systemNote}>Leitura derivada do texto canônico do Dia 001; não é uma definição universal dessas tradições.</Text>
+              <Text style={styles.systemNote}>
+                Leitura derivada do texto canônico do Dia 001; não é uma definição universal dessas tradições.
+              </Text>
             </View>
             <View style={styles.epistemicRibbon}>
               <Text style={styles.epistemicCode}>HNK-EP</Text>
-              <Text style={styles.epistemicText}>Experiência espiritual, símbolo tradicional e sensação subjetiva permanecem distinguíveis de afirmação científica ou biomédica.</Text>
+              <Text style={styles.epistemicText}>
+                Experiência espiritual, símbolo tradicional e sensação subjetiva permanecem distinguíveis de afirmação científica ou biomédica.
+              </Text>
             </View>
-            <PrimaryAction label="ABRIR O MANUSCRITO" onPress={() => go('jachin')} />
-          </ActField>
+            <PrimaryAction label="ABRIR O MANUSCRITO" onPress={() => setAct('jachin')} />
+          </Panel>
         ) : null}
 
         {act === 'jachin' ? (
-          <ActField tone="expansion">
+          <Panel>
             <ActHeading eyebrow="III · JACHIN · EXPANSÃO" title="O conhecimento primeiro é lido. Depois, é praticado." />
             <Manuscript label="DOUTRINA · TEXTO CANÔNICO" title="O abismo silencioso de Kether" text={day.jachinDoctrine} />
-            <View style={styles.marginNotes}>
+            <View style={styles.notes}>
               <MarginNote label="CONCEITO" title="Vida Zoe" text="Linguagem teológica da vida divina usada pelo próprio manuscrito." />
               <MarginNote label="GESTO" title="O Salto" text="O Louco funciona como imagem de entrada e abandono temporário de definições." />
-              <MarginNote label="REFERÊNCIA" title="Dai Koo Myo" text="Está no cânone; o master visual HNK continua pendente. O app não inventa um desenho." />
+              <MarginNote
+                label="REFERÊNCIA"
+                title="Dai Koo Myo"
+                text="Está no cânone; o master visual HNK continua pendente. O app não inventa um desenho."
+              />
             </View>
-            <View style={styles.practiceChamber}>
+            <PracticeChamber>
               <Text style={styles.kicker}>KAVANAH · PRÁTICA</Text>
               <Text style={styles.practiceTitle}>Dez minutos de foco.</Text>
               <Text style={styles.practiceText}>{day.jachinKavanah}</Text>
@@ -335,20 +353,30 @@ export function Day001ImmersiveMobileVerticalSlice() {
                   setJachinDone(true);
                 }}
               />
-            </View>
-            <PrimaryAction label="CONTRAIR A FORÇA · ENTRAR EM BOAZ" onPress={() => go('boaz')} disabled={!jachinDone} />
-          </ActField>
+            </PracticeChamber>
+            <PrimaryAction
+              label="CONTRAIR A FORÇA · ENTRAR EM BOAZ"
+              onPress={() => setAct('boaz')}
+              disabled={!jachinDone}
+            />
+          </Panel>
         ) : null}
 
         {act === 'boaz' ? (
-          <ActField tone="restriction">
-            <ActHeading eyebrow="IV · BOAZ · RESTRIÇÃO" title="A forma cria um vaso para a força." body="A experiência se contrai: menos abertura, mais limite, observação e escolha prática." />
-            <View style={styles.boazAxis}><View style={styles.boazLine} /><View style={[styles.boazNode, { top: 24 }]} /><View style={[styles.boazNode, { top: 104 }]} /><View style={[styles.boazNode, { top: 184 }]} /></View>
+          <Panel>
+            <ActHeading
+              eyebrow="IV · BOAZ · RESTRIÇÃO"
+              title="A forma cria um vaso para a força."
+              body="A experiência se contrai: menos abertura, mais limite, observação e escolha prática."
+            />
+            <BoazAxis />
             <Manuscript label="DOUTRINA · TEXTO CANÔNICO" title="O rigor como estrutura" text={day.boazDoctrine} />
-            <View style={styles.practiceChamberDark}>
+            <PracticeChamber dark>
               <Text style={styles.kicker}>KAVANAH · PRÁTICA</Text>
               <Text style={styles.practiceText}>{day.boazKavanah}</Text>
-              <Text style={styles.safetyNote}>Camada de segurança do produto: você pode ajustar postura, abrir os olhos ou encerrar. Desconforto não é meta nem requisito de progresso.</Text>
+              <Text style={styles.safetyNote}>
+                Camada de segurança do produto: você pode ajustar postura, abrir os olhos ou encerrar. Desconforto não é meta nem requisito de progresso.
+              </Text>
               <RitualTimer
                 targetSeconds={300}
                 label="RELAXAMENTO · BOAZ"
@@ -357,7 +385,7 @@ export function Day001ImmersiveMobileVerticalSlice() {
                   setBoazDone(true);
                 }}
               />
-            </View>
+            </PracticeChamber>
             <View style={styles.lab}>
               <Text style={styles.kicker}>ORDÁLIA · LABORATÓRIO</Text>
               <Text style={styles.labTitle}>Retire três distrações do centro.</Text>
@@ -369,7 +397,9 @@ export function Day001ImmersiveMobileVerticalSlice() {
                     <Text style={styles.bladeLabel}>DISTRAÇÃO</Text>
                     <TextInput
                       value={value}
-                      onChangeText={(text) => setDistractions((current) => current.map((item, itemIndex) => itemIndex === index ? text : item))}
+                      onChangeText={(text) =>
+                        setDistractions((current) => current.map((item, itemIndex) => (itemIndex === index ? text : item)))
+                      }
                       placeholder={`Nomeie a distração ${index + 1}…`}
                       placeholderTextColor={C.textMuted}
                       style={styles.bladeInput}
@@ -379,16 +409,20 @@ export function Day001ImmersiveMobileVerticalSlice() {
                 ))}
               </View>
             </View>
-            <PrimaryAction label="CONVERGIR OS PILARES" onPress={() => go('meio')} disabled={!boazDone || !distractionsReady} />
-          </ActField>
+            <PrimaryAction
+              label="CONVERGIR OS PILARES"
+              onPress={() => setAct('meio')}
+              disabled={!boazDone || !distractionsReady}
+            />
+          </Panel>
         ) : null}
 
         {act === 'meio' ? (
-          <ActField tone="middle">
+          <Panel>
             <ConvergenceGeometry />
             <ActHeading eyebrow="V · PILAR DO MEIO · CONVERGÊNCIA" title="Expansão e rigor deixam de competir." />
             <Manuscript label="INTEGRAÇÃO · TEXTO CANÔNICO" title="Força + forma" text={day.middleDoctrine} />
-            <View style={styles.voiceTemple}>
+            <PracticeChamber>
               <Text style={styles.kicker}>KAVANAH VOCAL · SEM GRAVAÇÃO AUTOMÁTICA</Text>
               <Text style={styles.practiceTitle}>A voz como prática.</Text>
               <Text style={styles.practiceText}>{day.middleKavanah}</Text>
@@ -402,11 +436,20 @@ export function Day001ImmersiveMobileVerticalSlice() {
                 }}
               />
               <Text style={styles.systemNote}>Nenhuma gravação, análise da voz ou upload é necessário para concluir o Dia.</Text>
-            </View>
-            <View style={styles.reflectionGrid}>
-              <ReflectionField label="INTENÇÃO DO NEÓFITO" value={intention} onChange={setIntention} placeholder="O que você traz para esta travessia?" />
-              <ReflectionField label="ESPELHO DA ALMA" value={mirror} onChange={setMirror} placeholder="O que mudou entre o início e agora?" large />
-            </View>
+            </PracticeChamber>
+            <ReflectionField
+              label="INTENÇÃO DO NEÓFITO"
+              value={intention}
+              onChange={setIntention}
+              placeholder="O que você traz para esta travessia?"
+            />
+            <ReflectionField
+              label="ESPELHO DA ALMA"
+              value={mirror}
+              onChange={setMirror}
+              placeholder="O que mudou entre o início e agora?"
+              large
+            />
             <Pressable
               accessibilityRole="checkbox"
               accessibilityState={{ checked: contractAccepted }}
@@ -414,27 +457,32 @@ export function Day001ImmersiveMobileVerticalSlice() {
               onPress={() => setContractAccepted((value) => !value)}
             >
               <View style={[styles.contractNode, contractAccepted && styles.contractNodeActive]} />
-              <Text style={styles.contractText}>{contractAccepted ? 'CONTRATO DO NEÓFITO · CONFIRMADO' : 'PRÁTICA VOLUNTÁRIA · RETORNO PRESERVADO'}</Text>
+              <Text style={styles.contractText}>
+                {contractAccepted ? 'CONTRATO DO NEÓFITO · CONFIRMADO' : 'PRÁTICA VOLUNTÁRIA · RETORNO PRESERVADO'}
+              </Text>
             </Pressable>
-            <PrimaryAction label="PREPARAR O SELO" onPress={() => go('selo')} disabled={!middleReady} />
-          </ActField>
+            <PrimaryAction label="PREPARAR O SELO" onPress={() => setAct('selo')} disabled={!middleReady} />
+          </Panel>
         ) : null}
 
         {act === 'selo' ? (
-          <ActField tone="seal">
+          <Panel>
             <TreeField sealed={sparkWitnessed} reduceMotion={reduceMotion} />
             <Text style={styles.kicker}>VI · SELO · PASSAGEM</Text>
             <Text style={styles.sealTitle}>{sparkWitnessed ? 'Agora existe uma luz.' : 'A travessia pede um testemunho.'}</Text>
             {!sparkWitnessed ? (
               <>
-                <Text style={styles.heroBody}>O conteúdo íntimo será cifrado antes do sync. O Practice Record recebe apenas evidência estruturada; o servidor decide XP e progressão.</Text>
-                <SystemStrip items={[
-                  ['JACHIN', `${durations.jachin}s`],
-                  ['BOAZ', `${durations.boaz}s`],
-                  ['MEIO', `${durations.middle}s`],
-                  ['DISTRAÇÕES', '3 / 3'],
-                ]} />
-                {syncError ? <ErrorNotice text={syncError} /> : null}
+                <Text style={styles.heroBody}>
+                  O conteúdo íntimo será cifrado antes do sync. O Practice Record recebe apenas evidência estruturada; o servidor decide XP e progressão.
+                </Text>
+                <SystemStrip
+                  items={[
+                    ['JACHIN', `${durations.jachin}s`],
+                    ['BOAZ', `${durations.boaz}s`],
+                    ['MEIO', `${durations.middle}s`],
+                    ['DISTRAÇÕES', '3 / 3'],
+                  ]}
+                />
                 <PrimaryAction
                   label={syncState === 'sealing' ? 'CIFRANDO E SELANDO…' : isLive ? 'CIFRAR · REGISTRAR · CONCLUIR' : 'TESTEMUNHAR EM MODO DEMO'}
                   onPress={() => void sealDay()}
@@ -445,14 +493,18 @@ export function Day001ImmersiveMobileVerticalSlice() {
               <>
                 <View style={styles.rewardHalo}>
                   <Text style={styles.rewardLabel}>{completion ? 'RESPOSTA CANÔNICA DO SERVIDOR' : 'DEMONSTRAÇÃO · SEM PERSISTÊNCIA'}</Text>
-                  <Text style={styles.rewardXp}>{completion ? (completion.firstCompletion ? `+${completion.xpAwarded} XP` : 'XP JÁ SELADO') : `+${day.xp} XP`}</Text>
+                  <Text style={styles.rewardXp}>
+                    {completion ? (completion.firstCompletion ? `+${completion.xpAwarded} XP` : 'XP JÁ SELADO') : `+${day.xp} XP`}
+                  </Text>
                   <Text style={styles.rewardTotal}>1 DE 36 TRAVESSIAS DE KETHER</Text>
                 </View>
-                <Text style={styles.systemNote}>O Fragmento I de Vehuiah continua reservado ao fechamento do ciclo no Dia 005.</Text>
-                <PrimaryAction label="RETORNAR AO ÁTRIO TRANSFORMADO" onPress={() => go('limiar')} />
+                <Text style={styles.systemNote}>
+                  O Fragmento I de Vehuiah continua reservado ao fechamento do ciclo no Dia 005.
+                </Text>
+                <PrimaryAction label="RETORNAR AO ÁTRIO TRANSFORMADO" onPress={() => setAct('limiar')} />
               </>
             )}
-          </ActField>
+          </Panel>
         ) : null}
 
         <FooterStatus day={day} act={act} practice={practice} vaultHash={vaultHash} />
@@ -461,7 +513,19 @@ export function Day001ImmersiveMobileVerticalSlice() {
   );
 }
 
-function Header({ day, act, live, onNavigate, onSignOut }: { day: Day001Snapshot; act: MacroAct; live: boolean; onNavigate: (target: MacroAct) => void; onSignOut: () => void }) {
+function Header({
+  day,
+  act,
+  live,
+  onNavigate,
+  onSignOut,
+}: {
+  day: Day001Snapshot;
+  act: MacroAct;
+  live: boolean;
+  onNavigate: (target: MacroAct) => void;
+  onSignOut: () => void;
+}) {
   const current = ACTS.findIndex((item) => item.id === act);
   return (
     <View style={styles.header}>
@@ -472,7 +536,11 @@ function Header({ day, act, live, onNavigate, onSignOut }: { day: Day001Snapshot
         </View>
         <View style={styles.headerRight}>
           <Text style={styles.systemSource}>{day.source === 'supabase' ? 'CANON LIVE' : 'CANON OFFLINE'}</Text>
-          {live ? <Pressable onPress={onSignOut}><Text style={styles.signOut}>SAIR DO ÁTRIO</Text></Pressable> : null}
+          {live ? (
+            <Pressable onPress={onSignOut}>
+              <Text style={styles.signOut}>SAIR DO ÁTRIO</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
       <View style={styles.ritualMap} accessibilityLabel="Mapa ritual do Dia 001">
@@ -481,7 +549,9 @@ function Header({ day, act, live, onNavigate, onSignOut }: { day: Day001Snapshot
             <View style={[styles.ritualNode, index === current && styles.ritualNodeActive, index < current && styles.ritualNodeComplete]}>
               <Text style={styles.ritualRoman}>{item.roman}</Text>
             </View>
-            <Text style={[styles.ritualLabel, index === current && styles.ritualLabelActive]} numberOfLines={1}>{item.label}</Text>
+            <Text style={[styles.ritualLabel, index === current && styles.ritualLabelActive]} numberOfLines={1}>
+              {item.label}
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -489,8 +559,12 @@ function Header({ day, act, live, onNavigate, onSignOut }: { day: Day001Snapshot
   );
 }
 
-function ActField({ children, tone }: { children: ReactNode; tone: 'threshold' | 'revelation' | 'expansion' | 'restriction' | 'middle' | 'seal' }) {
-  return <View style={[styles.actField, styles[`tone_${tone}`]]}>{children}</View>;
+function Panel({ children }: { children: ReactNode }) {
+  return <View style={styles.panel}>{children}</View>;
+}
+
+function PracticeChamber({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
+  return <View style={[styles.practiceChamber, dark && styles.practiceChamberDark]}>{children}</View>;
 }
 
 function ActHeading({ eyebrow, title, body }: { eyebrow: string; title: string; body?: string }) {
@@ -572,7 +646,10 @@ function RitualTimer({ targetSeconds, label, onCommit }: { targetSeconds: number
   }, [elapsed, targetSeconds]);
 
   const remaining = Math.max(0, targetSeconds - elapsed);
-  const formatted = useMemo(() => `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`, [remaining]);
+  const formatted = useMemo(
+    () => `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`,
+    [remaining],
+  );
 
   return (
     <View style={styles.timer}>
@@ -606,6 +683,17 @@ function AudioPending() {
   return <Text style={styles.audioPending}>ÁUDIO RITUAL · PRESET_PENDING · nenhuma frequência é escolhida silenciosamente</Text>;
 }
 
+function BoazAxis() {
+  return (
+    <View style={styles.boazAxis}>
+      <View style={styles.boazLine} />
+      <View style={[styles.boazNode, { top: 24 }]} />
+      <View style={[styles.boazNode, { top: 104 }]} />
+      <View style={[styles.boazNode, { top: 184 }]} />
+    </View>
+  );
+}
+
 function VoiceWave({ active, reduceMotion }: { active: boolean; reduceMotion: boolean }) {
   return (
     <View style={styles.waveField} accessibilityLabel="Visualização abstrata da prática vocal">
@@ -617,7 +705,19 @@ function VoiceWave({ active, reduceMotion }: { active: boolean; reduceMotion: bo
   );
 }
 
-function ReflectionField({ label, value, onChange, placeholder, large = false }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; large?: boolean }) {
+function ReflectionField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  large = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  large?: boolean;
+}) {
   return (
     <View style={styles.reflectionField}>
       <Text style={styles.reflectionLabel}>{label}</Text>
@@ -646,13 +746,33 @@ function ConvergenceGeometry() {
 
 function TreeField({ sealed, reduceMotion }: { sealed: boolean; reduceMotion: boolean }) {
   const nodes = [
-    [150, 34], [94, 96], [206, 96], [76, 174], [224, 174], [150, 220], [86, 300], [214, 300], [150, 366], [150, 430],
+    [150, 34],
+    [94, 96],
+    [206, 96],
+    [76, 174],
+    [224, 174],
+    [150, 220],
+    [86, 300],
+    [214, 300],
+    [150, 366],
+    [150, 430],
   ];
   return (
-    <View style={styles.treeField} accessibilityLabel={sealed ? 'Árvore da Vida com Kether aceso' : 'Árvore da Vida aguardando primeira centelha'}>
+    <View
+      style={styles.treeField}
+      accessibilityLabel={sealed ? 'Árvore da Vida com Kether aceso' : 'Árvore da Vida aguardando primeira centelha'}
+    >
       <View style={styles.treeStem} />
       {nodes.map(([left, top], index) => (
-        <View key={index} style={[styles.treeNode, { left, top }, index === 0 && sealed && styles.treeKetherLit, index === 0 && sealed && !reduceMotion && styles.treeKetherGlow]} />
+        <View
+          key={index}
+          style={[
+            styles.treeNode,
+            { left, top },
+            index === 0 && sealed && styles.treeKetherLit,
+            index === 0 && sealed && !reduceMotion && styles.treeKetherGlow,
+          ]}
+        />
       ))}
     </View>
   );
@@ -691,13 +811,32 @@ function ErrorNotice({ text }: { text: string }) {
 
 function PrimaryAction({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
   return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.primaryButton, disabled && styles.primaryButtonDisabled, pressed && !disabled && styles.primaryButtonPressed]}>
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.primaryButton,
+        disabled && styles.primaryButtonDisabled,
+        pressed && !disabled && styles.primaryButtonPressed,
+      ]}
+    >
       <Text style={[styles.primaryButtonText, disabled && styles.primaryButtonTextDisabled]}>{label}</Text>
     </Pressable>
   );
 }
 
-function FooterStatus({ day, act, practice, vaultHash }: { day: Day001Snapshot; act: MacroAct; practice: PracticeSessionRecord | null; vaultHash: string | null }) {
+function FooterStatus({
+  day,
+  act,
+  practice,
+  vaultHash,
+}: {
+  day: Day001Snapshot;
+  act: MacroAct;
+  practice: PracticeSessionRecord | null;
+  vaultHash: string | null;
+}) {
   return (
     <View style={styles.footer}>
       <Text style={styles.footerText}>SOURCE · {day.sourceSha.slice(0, 10)}</Text>
@@ -712,7 +851,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.void },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: R.r24, backgroundColor: C.void },
   scrollContent: { width: '100%', maxWidth: 820, alignSelf: 'center', paddingHorizontal: R.r24, paddingTop: R.r24, paddingBottom: R.r72 },
-  header: { gap: R.r18, marginBottom: R.r24 },
+  header: { gap: R.r24, marginBottom: R.r24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: R.r12 },
   headerRight: { alignItems: 'flex-end' },
   systemEyebrow: { color: C.goldMaterial, fontSize: 9, letterSpacing: 2.2, fontWeight: '700', fontFamily: ketherTokens.typography.system.fallback[0] },
@@ -727,13 +866,7 @@ const styles = StyleSheet.create({
   ritualRoman: { color: C.textSecondary, fontSize: 8, fontFamily: ketherTokens.typography.system.fallback[0] },
   ritualLabel: { color: C.textMuted, fontSize: 6.5, letterSpacing: 0.6, fontFamily: ketherTokens.typography.system.fallback[0] },
   ritualLabelActive: { color: C.goldBright },
-  actField: { minHeight: 560, gap: R.r24, paddingVertical: R.r24, paddingHorizontal: R.r18, borderWidth: 1, borderColor: 'rgba(203,176,109,0.12)' },
-  tone_threshold: { backgroundColor: 'rgba(255,255,255,0.006)' },
-  tone_revelation: { backgroundColor: 'rgba(203,176,109,0.018)' },
-  tone_expansion: { backgroundColor: 'rgba(255,253,244,0.018)', borderTopColor: 'rgba(203,176,109,0.36)' },
-  tone_restriction: { backgroundColor: 'rgba(65,45,20,0.025)', borderLeftColor: 'rgba(203,176,109,0.42)' },
-  tone_middle: { backgroundColor: 'rgba(203,176,109,0.022)' },
-  tone_seal: { backgroundColor: 'rgba(255,253,244,0.012)', borderColor: 'rgba(203,176,109,0.26)' },
+  panel: { minHeight: 560, gap: R.r24, paddingVertical: R.r24, paddingHorizontal: R.r24, borderWidth: 1, borderColor: 'rgba(203,176,109,0.14)', backgroundColor: 'rgba(255,253,244,0.012)' },
   kicker: { color: C.goldMaterial, fontSize: 9, letterSpacing: 2.1, fontWeight: '700', fontFamily: ketherTokens.typography.system.fallback[0] },
   heroTitle: { color: C.originWhite, fontSize: 44, lineHeight: 49, fontWeight: '300', fontFamily: ketherTokens.typography.sacredDisplay.fallback[0] },
   heroAccent: { color: C.goldBright, fontStyle: 'italic' },
@@ -766,18 +899,18 @@ const styles = StyleSheet.create({
   epistemicRibbon: { borderLeftWidth: 1, borderColor: C.goldMaterial, paddingLeft: R.r12, gap: R.r6 },
   epistemicCode: { color: C.goldBright, fontSize: 8, letterSpacing: 1.7, fontWeight: '700', fontFamily: ketherTokens.typography.system.fallback[0] },
   epistemicText: { color: C.textMuted, fontSize: 11, lineHeight: 18, fontFamily: ketherTokens.typography.system.fallback[0] },
-  manuscript: { gap: R.r18, padding: R.r24, borderWidth: 1, borderColor: 'rgba(203,176,109,0.18)', backgroundColor: 'rgba(255,253,244,0.018)' },
+  manuscript: { gap: R.r12, padding: R.r24, borderWidth: 1, borderColor: 'rgba(203,176,109,0.18)', backgroundColor: 'rgba(255,253,244,0.018)' },
   manuscriptLabel: { color: C.textMuted, fontSize: 8, letterSpacing: 1.5, fontFamily: ketherTokens.typography.system.fallback[0] },
   manuscriptTitle: { color: C.originWhite, fontSize: 31, lineHeight: 37, fontWeight: '300', fontFamily: ketherTokens.typography.sacredDisplay.fallback[0] },
   manuscriptRule: { height: 1, backgroundColor: 'rgba(203,176,109,0.18)' },
   manuscriptText: { color: C.textPrimary, fontSize: 17, lineHeight: 30, fontFamily: ketherTokens.typography.editorialBody.fallback[0] },
-  marginNotes: { gap: R.r6 },
+  notes: { gap: R.r6 },
   marginNote: { borderLeftWidth: 1, borderColor: 'rgba(203,176,109,0.25)', paddingLeft: R.r12, paddingVertical: R.r6 },
   marginLabel: { color: C.textMuted, fontSize: 7, letterSpacing: 1.4, fontFamily: ketherTokens.typography.system.fallback[0] },
   marginTitle: { color: C.goldBright, fontSize: 17, marginVertical: R.r3, fontFamily: ketherTokens.typography.sacredDisplay.fallback[0] },
   marginText: { color: C.textSecondary, fontSize: 12, lineHeight: 18, fontFamily: ketherTokens.typography.editorialBody.fallback[0] },
-  practiceChamber: { gap: R.r18, padding: R.r24, borderWidth: 1, borderColor: 'rgba(203,176,109,0.16)', backgroundColor: 'rgba(0,0,0,0.32)' },
-  practiceChamberDark: { gap: R.r18, padding: R.r24, borderWidth: 1, borderColor: 'rgba(203,176,109,0.14)', backgroundColor: 'rgba(0,0,0,0.48)' },
+  practiceChamber: { gap: R.r12, padding: R.r24, borderWidth: 1, borderColor: 'rgba(203,176,109,0.16)', backgroundColor: 'rgba(0,0,0,0.32)' },
+  practiceChamberDark: { backgroundColor: 'rgba(0,0,0,0.48)' },
   practiceTitle: { color: C.originWhite, fontSize: 29, fontWeight: '300', fontFamily: ketherTokens.typography.sacredDisplay.fallback[0] },
   practiceText: { color: C.textSecondary, fontSize: 15, lineHeight: 25, fontFamily: ketherTokens.typography.editorialBody.fallback[0] },
   safetyNote: { color: C.textMuted, fontSize: 10, lineHeight: 17, borderLeftWidth: 1, borderColor: 'rgba(203,176,109,0.2)', paddingLeft: R.r12, fontFamily: ketherTokens.typography.system.fallback[0] },
@@ -795,29 +928,27 @@ const styles = StyleSheet.create({
   boazAxis: { height: 220, width: 100, alignSelf: 'center', position: 'relative', marginVertical: R.r6 },
   boazLine: { position: 'absolute', left: 49, top: 10, width: 1, height: 200, backgroundColor: 'rgba(203,176,109,0.3)' },
   boazNode: { position: 'absolute', left: 39, width: 20, height: 20, borderWidth: 1, borderColor: 'rgba(203,176,109,0.45)', backgroundColor: C.void, transform: [{ rotate: '45deg' }] },
-  lab: { gap: R.r18, borderWidth: 1, borderColor: 'rgba(203,176,109,0.14)', padding: R.r18 },
+  lab: { gap: R.r12, borderWidth: 1, borderColor: 'rgba(203,176,109,0.14)', padding: R.r24 },
   labTitle: { color: C.originWhite, fontSize: 29, fontWeight: '300', fontFamily: ketherTokens.typography.sacredDisplay.fallback[0] },
   bladeStack: { gap: R.r12 },
-  blade: { minHeight: 170, borderWidth: 1, borderColor: 'rgba(203,176,109,0.15)', padding: R.r18, overflow: 'hidden' },
+  blade: { minHeight: 170, borderWidth: 1, borderColor: 'rgba(203,176,109,0.15)', padding: R.r12, overflow: 'hidden' },
   bladeActive: { borderColor: 'rgba(203,176,109,0.55)', backgroundColor: 'rgba(203,176,109,0.03)' },
   bladeGhost: { position: 'absolute', right: 12, top: -6, color: 'rgba(203,176,109,0.06)', fontSize: 62, fontFamily: ketherTokens.typography.sacredDisplay.fallback[0] },
   bladeLabel: { color: C.textMuted, fontSize: 7, letterSpacing: 1.3, fontFamily: ketherTokens.typography.system.fallback[0] },
-  bladeInput: { minHeight: 100, marginTop: R.r18, color: C.textPrimary, fontSize: 14, lineHeight: 22, borderBottomWidth: 1, borderColor: 'rgba(203,176,109,0.18)', fontFamily: ketherTokens.typography.editorialBody.fallback[0] },
+  bladeInput: { minHeight: 100, marginTop: R.r12, color: C.textPrimary, fontSize: 14, lineHeight: 22, borderBottomWidth: 1, borderColor: 'rgba(203,176,109,0.18)', fontFamily: ketherTokens.typography.editorialBody.fallback[0] },
   convergence: { height: 120, position: 'relative', alignItems: 'center', justifyContent: 'center' },
   convergenceLine: { position: 'absolute', width: 140, height: 1, backgroundColor: 'rgba(203,176,109,0.32)' },
   convergenceLeft: { left: 25, transform: [{ rotate: '9deg' }] },
   convergenceRight: { right: 25, transform: [{ rotate: '-9deg' }] },
   convergenceCenter: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: C.goldMaterial, backgroundColor: C.void, shadowColor: C.goldBright, shadowOpacity: 0.24, shadowRadius: 16 },
-  voiceTemple: { gap: R.r18, borderWidth: 1, borderColor: 'rgba(203,176,109,0.16)', padding: R.r24 },
   waveField: { height: 90, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(203,176,109,0.08)' },
   waveBar: { width: 2, backgroundColor: 'rgba(203,176,109,0.3)' },
   waveBarActive: { backgroundColor: 'rgba(244,216,142,0.75)' },
-  reflectionGrid: { gap: R.r12 },
-  reflectionField: { gap: R.r12, borderWidth: 1, borderColor: 'rgba(203,176,109,0.14)', padding: R.r18 },
+  reflectionField: { gap: R.r12, borderWidth: 1, borderColor: 'rgba(203,176,109,0.14)', padding: R.r12 },
   reflectionLabel: { color: C.goldMaterial, fontSize: 8, letterSpacing: 1.3, fontFamily: ketherTokens.typography.system.fallback[0] },
   reflectionInput: { minHeight: 100, color: C.textPrimary, fontSize: 14, lineHeight: 22, fontFamily: ketherTokens.typography.editorialBody.fallback[0] },
   reflectionInputLarge: { minHeight: 150 },
-  contract: { flexDirection: 'row', alignItems: 'center', gap: R.r12, borderWidth: 1, borderColor: 'rgba(203,176,109,0.18)', padding: R.r18 },
+  contract: { flexDirection: 'row', alignItems: 'center', gap: R.r12, borderWidth: 1, borderColor: 'rgba(203,176,109,0.18)', padding: R.r12 },
   contractActive: { borderColor: 'rgba(203,176,109,0.55)', backgroundColor: 'rgba(203,176,109,0.04)' },
   contractNode: { width: 12, height: 12, borderWidth: 1, borderColor: C.goldMaterial, transform: [{ rotate: '45deg' }] },
   contractNodeActive: { backgroundColor: C.goldMaterial, shadowColor: C.goldBright, shadowOpacity: 0.4, shadowRadius: 10 },
@@ -843,7 +974,7 @@ const styles = StyleSheet.create({
   errorNotice: { borderWidth: 1, borderColor: 'rgba(201,120,84,0.38)', backgroundColor: 'rgba(68,31,20,0.26)', padding: R.r12, gap: R.r6, marginBottom: R.r12 },
   errorTitle: { color: '#d7a27e', fontSize: 8, letterSpacing: 1.1, fontWeight: '700', fontFamily: ketherTokens.typography.system.fallback[0] },
   errorText: { color: C.textSecondary, fontSize: 11, lineHeight: 17, fontFamily: ketherTokens.typography.editorialBody.fallback[0] },
-  primaryButton: { alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(203,176,109,0.55)', backgroundColor: 'rgba(203,176,109,0.07)', paddingVertical: R.r12, paddingHorizontal: R.r18 },
+  primaryButton: { alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(203,176,109,0.55)', backgroundColor: 'rgba(203,176,109,0.07)', paddingVertical: R.r12, paddingHorizontal: R.r24 },
   primaryButtonPressed: { backgroundColor: 'rgba(203,176,109,0.14)' },
   primaryButtonDisabled: { opacity: 0.28 },
   primaryButtonText: { color: C.goldBright, fontSize: 9, letterSpacing: 1.2, fontWeight: '700', fontFamily: ketherTokens.typography.system.fallback[0] },
