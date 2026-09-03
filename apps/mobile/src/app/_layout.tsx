@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { HnkAuthProvider } from '../features/auth/AuthContext';
 
 export default function RootLayout() {
   return (
-    <>
+    <HnkAuthProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -11,6 +12,6 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: '#030406' },
         }}
       />
-    </>
+    </HnkAuthProvider>
   );
 }
