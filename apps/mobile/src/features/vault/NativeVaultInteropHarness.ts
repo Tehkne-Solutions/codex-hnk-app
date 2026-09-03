@@ -22,6 +22,8 @@ export interface NativeVaultInteropResult {
   checks: NativeVaultInteropCheck[];
 }
 
+const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
 function hexToBytes(hex: string): Uint8Array {
   if (!/^[a-f0-9]+$/i.test(hex) || hex.length % 2 !== 0) throw new Error('invalid_vector_hex');
   const bytes = new Uint8Array(hex.length / 2);
@@ -29,6 +31,31 @@ function hexToBytes(hex: string): Uint8Array {
     bytes[index] = Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16);
   }
   return bytes;
+}
+
+/**
+ * Encode native byte results ourselves instead of asking AESSealedData for
+ * base64. Expo Crypto 57's public TS surface calls the ciphertext option
+ * `encoding`, while the Android native record currently calls it
+ * `outputFormat`. Reading the documented/default byte form keeps this proof
+ * independent of that adapter mismatch and compares the exact AES-GCM bytes.
+ */
+function bytesToBase64(bytes: Uint8Array): string {
+  let output = '';
+  for (let offset = 0; offset < bytes.length; offset += 3) {
+    const a = bytes[offset] ?? 0;
+    const hasB = offset + 1 < bytes.length;
+    const hasC = offset + 2 < bytes.length;
+    const b = hasB ? bytes[offset + 1]! : 0;
+    const c = hasC ? bytes[offset + 2]! : 0;
+    const value = (a << 16) | (b << 8) | c;
+
+    output += BASE64_ALPHABET[(value >>> 18) & 0x3f];
+    output += BASE64_ALPHABET[(value >>> 12) & 0x3f];
+    output += hasB ? BASE64_ALPHABET[(value >>> 6) & 0x3f] : '=';
+    output += hasC ? BASE64_ALPHABET[value & 0x3f] : '=';
+  }
+  return output;
 }
 
 /**
@@ -57,11 +84,10 @@ export async function runNativeVaultInteropVector(): Promise<NativeVaultInteropR
     tagLength: 16,
   });
 
-  const ciphertext = await sealed.ciphertext({ encoding: 'base64', includeTag: true });
-  const nonce = await sealed.iv('base64');
-  if (typeof ciphertext !== 'string' || typeof nonce !== 'string') {
-    throw new Error('native_interop_invalid_crypto_output');
-  }
+  const ciphertextBytes = await sealed.ciphertext({ includeTag: true });
+  const nonceBytes = await sealed.iv();
+  const ciphertext = bytesToBase64(ciphertextBytes);
+  const nonce = bytesToBase64(nonceBytes);
 
   const checksum = await digestStringAsync(
     CryptoDigestAlgorithm.SHA256,
