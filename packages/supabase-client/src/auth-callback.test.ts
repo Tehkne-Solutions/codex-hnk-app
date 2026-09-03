@@ -1,6 +1,7 @@
+// @ts-nocheck
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseAuthCallbackUrl } from './auth-callback';
+import { parseAuthCallbackUrl } from './auth-callback.ts';
 
 test('parses implicit-flow tokens from an hnk deep link', () => {
   assert.deepEqual(
