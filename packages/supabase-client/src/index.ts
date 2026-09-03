@@ -5,6 +5,7 @@ import {
 } from '@supabase/supabase-js';
 import type { Database } from '@hnk/database';
 
+export * from './auth-callback';
 export * from './kether-cycle01';
 export * from './practice-record';
 export * from './promotion-sync';
