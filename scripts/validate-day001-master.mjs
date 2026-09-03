@@ -2,8 +2,10 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const required = [
   'apps/mobile/package.json',
+  'apps/mobile/src/features/kether/Day001ImmersiveMobileVerticalSlice.tsx',
   'apps/mobile/src/features/kether/Day001MasterVerticalSlice.tsx',
   'apps/mobile/src/features/kether/Day001LiveVerticalSlice.tsx',
+  'apps/mobile/src/features/kether/day001-data.ts',
   'apps/web/package.json',
   'apps/web/app/day-001/Day001ImmersiveExperience.tsx',
   'apps/web/app/day-001/Day001WebExperience.tsx',
@@ -22,8 +24,10 @@ if (missing.length) {
 }
 
 const mobilePackage = readFileSync('apps/mobile/package.json', 'utf8');
-const mobileMaster = readFileSync('apps/mobile/src/features/kether/Day001MasterVerticalSlice.tsx', 'utf8');
+const mobileImmersive = readFileSync('apps/mobile/src/features/kether/Day001ImmersiveMobileVerticalSlice.tsx', 'utf8');
+const mobileLegacy = readFileSync('apps/mobile/src/features/kether/Day001MasterVerticalSlice.tsx', 'utf8');
 const mobileAlias = readFileSync('apps/mobile/src/features/kether/Day001LiveVerticalSlice.tsx', 'utf8');
+const mobileData = readFileSync('apps/mobile/src/features/kether/day001-data.ts', 'utf8');
 const webPackage = readFileSync('apps/web/package.json', 'utf8');
 const webImmersive = readFileSync('apps/web/app/day-001/Day001ImmersiveExperience.tsx', 'utf8');
 const webRuntime = readFileSync('apps/web/app/day-001/WebDay001Runtime.tsx', 'utf8');
@@ -31,11 +35,6 @@ const webCss = readFileSync('apps/web/app/day-001/day001-immersive.module.css', 
 const webRuntimeCss = readFileSync('apps/web/app/day-001/web-runtime.module.css', 'utf8');
 const webPage = readFileSync('apps/web/app/day-001/page.tsx', 'utf8');
 const freeze = readFileSync('docs/experience/kether/HNK_KETHER_FREEZE_V1.md', 'utf8');
-
-const frozenMobileScenes = [
-  'void', 'touch', 'geometry', 'crown', 'leap', 'crossing', 'chamber', 'reveal', 'manuscript', 'relic',
-  'kavanah', 'intention', 'contract', 'seal', 'mirror', 'quest', 'reward', 'tree', 'passage', 'atrium',
-];
 
 const immersiveActs = ['limiar', 'revelacao', 'jachin', 'boaz', 'meio', 'selo'];
 
@@ -54,15 +53,30 @@ const invariants = [
   ['Freeze says movements are grammar, not mechanical screens', freeze.includes('gramática de experiência, não template mecânico')],
 
   ['Mobile consumes @hnk/ui', mobilePackage.includes('"@hnk/ui": "workspace:*"')],
-  ['Mobile master imports shared tokens', mobileMaster.includes("from '@hnk/ui'")],
-  ['Mobile keeps frozen internal state order', tokensInOrder(mobileMaster, frozenMobileScenes)],
-  ['Mobile alias routes runtime to master slice', mobileAlias.includes('Day001MasterVerticalSlice as Day001LiveVerticalSlice')],
-  ['Mobile preserves practice session write', mobileMaster.includes('startPracticeSession')],
-  ['Mobile preserves encrypted Vault write', mobileMaster.includes('saveEncryptedVaultEntry') && mobileMaster.includes('encryptVaultText')],
-  ['Mobile preserves practice record write', mobileMaster.includes('savePracticeRecord')],
-  ['Mobile preserves idempotent completion path', mobileMaster.includes('completeCodexDay')],
-  ['Mobile does not resolve pending audio by inference', mobileMaster.includes('PRESET PENDING')],
-  ['Mobile preserves Day 005 Fragment boundary', mobileMaster.includes('Dia 005')],
+  ['Mobile active alias routes to immersive V2', mobileAlias.includes('Day001ImmersiveMobileVerticalSlice as Day001LiveVerticalSlice') && !mobileAlias.includes('Day001MasterVerticalSlice as Day001LiveVerticalSlice')],
+  ['Mobile immersive acts follow ritual order', tokensInOrder(mobileImmersive, immersiveActs)],
+  ['Mobile active experience has ritual map instead of 20-step counter', mobileImmersive.includes('Mapa ritual do Dia 001') && mobileImmersive.includes('ACTS.map') && !mobileImmersive.includes('SCENES.length') && !mobileImmersive.includes('/ 20')],
+  ['Mobile teaches with canonical doctrine fields', mobileImmersive.includes('day.jachinDoctrine') && mobileImmersive.includes('day.boazDoctrine') && mobileImmersive.includes('day.middleDoctrine')],
+  ['Mobile data snapshot loads doctrine from canonical count blocks', mobileData.includes("extractBlock(rawMarkdown, 'jachin-doctrine')") && mobileData.includes("extractBlock(rawMarkdown, 'boaz-doctrine')") && mobileData.includes("extractBlock(rawMarkdown, 'middle-doctrine')")],
+  ['Mobile offline bundle contains educational doctrine fallback', mobileData.includes('O abismo silencioso de Kether') && mobileData.includes('A descida da força exige um vaso') && mobileData.includes('No pilar central de Tiphereth')],
+  ['Mobile has three symbolic keys', mobileImmersive.includes("id: 'louco'") && mobileImmersive.includes("id: 'fehu'") && mobileImmersive.includes("id: 'iching'")],
+  ['Mobile contextualizes symbolic keys', mobileImmersive.includes('não é uma definição universal')],
+  ['Mobile exposes HNK epistemic boundary', mobileImmersive.includes('HNK-EP') && mobileImmersive.includes('afirmação científica ou biomédica')],
+  ['Mobile has Jachin Boaz Middle timers', mobileImmersive.includes('targetSeconds={600}') && mobileImmersive.includes('targetSeconds={300}') && mobileImmersive.includes('targetSeconds={180}')],
+  ['Mobile does not reward discomfort or intensity', mobileImmersive.includes('Nenhum bônus é concedido por desconforto ou intensidade subjetiva')],
+  ['Mobile does not invent Dai Koo Myo visual', mobileImmersive.includes('master visual HNK continua pendente')],
+  ['Mobile keeps audio unresolved', mobileImmersive.includes('PRESET_PENDING')],
+  ['Mobile implements three-distraction laboratory', mobileImmersive.includes("useState(['', '', ''])") && mobileImmersive.includes('DISTRAÇÃO') && mobileImmersive.includes('3 / 3')],
+  ['Mobile has intention Mirror and voluntary contract', mobileImmersive.includes('INTENÇÃO DO NEÓFITO') && mobileImmersive.includes('ESPELHO DA ALMA') && mobileImmersive.includes('PRÁTICA VOLUNTÁRIA · RETORNO PRESERVADO')],
+  ['Mobile voice practice does not require recording', mobileImmersive.includes('SEM GRAVAÇÃO AUTOMÁTICA') && mobileImmersive.includes('Nenhuma gravação, análise da voz ou upload é necessário')],
+  ['Mobile preserves real practice session write', mobileImmersive.includes('startPracticeSession') && mobileImmersive.includes("mode: 'canonical'")],
+  ['Mobile preserves encrypted Vault write', mobileImmersive.includes('saveEncryptedVaultEntry') && mobileImmersive.includes('encryptVaultText')],
+  ['Mobile preserves structured Practice Record write', mobileImmersive.includes('savePracticeRecord') && mobileImmersive.includes('distraction_count')],
+  ['Mobile preserves idempotent completion path', mobileImmersive.includes('completeCodexDay') && mobileImmersive.includes('firstCompletion')],
+  ['Mobile clears private fields after live seal', mobileImmersive.includes("setIntention('')") && mobileImmersive.includes("setMirror('')") && mobileImmersive.includes("setDistractions(['', '', ''])")],
+  ['Mobile Tree keeps Day 005 Fragment boundary', mobileImmersive.includes('Fragmento I de Vehuiah continua reservado') && mobileImmersive.includes('Dia 005')],
+  ['Mobile preserves reduced-motion support', mobileImmersive.includes('reduceMotionChanged') && mobileImmersive.includes('reduceMotion')],
+  ['Legacy mobile file remains non-routed for comparison only', mobileLegacy.includes("const SCENES: Scene[]") && !mobileAlias.includes('Day001MasterVerticalSlice')],
 
   ['Web depends on shared Supabase runtime', webPackage.includes('"@hnk/supabase-client": "workspace:*"')],
   ['Web route renders immersive experience V2', webPage.includes('<Day001ImmersiveExperience />') && !webPage.includes('<Day001WebExperience />')],
