@@ -6,6 +6,7 @@ const required = [
   'apps/mobile/src/features/kether/Day001LiveVerticalSlice.tsx',
   'apps/web/app/day-001/Day001WebExperience.tsx',
   'apps/web/app/day-001/day001.module.css',
+  'apps/web/app/day-001/day001-review.module.css',
   'apps/web/app/day-001/page.tsx',
   'docs/experience/kether/HNK_KETHER_FREEZE_V1.md',
 ];
@@ -22,6 +23,7 @@ const mobileMaster = readFileSync('apps/mobile/src/features/kether/Day001MasterV
 const mobileAlias = readFileSync('apps/mobile/src/features/kether/Day001LiveVerticalSlice.tsx', 'utf8');
 const webMaster = readFileSync('apps/web/app/day-001/Day001WebExperience.tsx', 'utf8');
 const webCss = readFileSync('apps/web/app/day-001/day001.module.css', 'utf8');
+const webReviewCss = readFileSync('apps/web/app/day-001/day001-review.module.css', 'utf8');
 const webPage = readFileSync('apps/web/app/day-001/page.tsx', 'utf8');
 const freeze = readFileSync('docs/experience/kether/HNK_KETHER_FREEZE_V1.md', 'utf8');
 
@@ -74,6 +76,7 @@ const invariants = [
   ['Mobile preserves Day 005 Fragment boundary', mobileMaster.includes('Dia 005')],
   ['Web master follows frozen scene order', scenesInOrder(webMaster)],
   ['Web master activates scoped Kether theme', webMaster.includes('data-hnk-theme="kether"')],
+  ['Web exposes scene identity for art-direction states', webMaster.includes('data-scene={scene.key}')],
   ['Web route renders Day 001 master', webPage.includes('<Day001WebExperience />')],
   ['Web proof labels local state truthfully', webMaster.includes('WEB PROOF · LOCAL STATE')],
   ['Web does not silently claim canonical manuscript copy', webMaster.includes('CANON COPY NOT DUPLICATED')],
@@ -86,6 +89,10 @@ const invariants = [
   ['Web CSS consumes frozen rhythm', webCss.includes('var(--hnk-rhythm-72)')],
   ['Web CSS has mobile breakpoint', webCss.includes('@media (max-width: 640px)')],
   ['Web CSS has reduced-motion behavior', webCss.includes('@media (prefers-reduced-motion: reduce)')],
+  ['Visual Review V1 keeps Relic as 12-column editorial composition', webReviewCss.includes('grid-template-columns: repeat(12') && webReviewCss.includes('.relicScene')],
+  ['Visual Review V1 elevates transformed Atrium independently', webReviewCss.includes('.atriumScene') && webReviewCss.includes('.treeStage')],
+  ['Visual Review V1 preserves mobile-specific composition', webReviewCss.includes('@media (max-width: 640px)')],
+  ['Visual Review V1 does not add image or external sacred-symbol dependency', !webReviewCss.includes('url(') && !webMaster.includes('<img')],
 ];
 
 const failed = invariants.filter(([, ok]) => !ok);
