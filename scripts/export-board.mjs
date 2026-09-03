@@ -33,28 +33,8 @@ async function sha256(path) {
   return createHash('sha256').update(buffer).digest('hex');
 }
 
-const args = parseArgs(process.argv.slice(2));
-const boardId = required(args, 'id');
-const route = required(args, 'route');
-const outputDirectory = resolve(required(args, 'out'));
-const slug = typeof args.slug === 'string' ? args.slug : boardId.replace(/-v\d+$/, '');
-const baseUrl = process.env.HNK_BOARD_BASE_URL ?? 'http://127.0.0.1:3000';
-const targetUrl = new URL(route, baseUrl).toString();
-
-await mkdir(outputDirectory, { recursive: true });
-
-const pngPath = resolve(outputDirectory, `${slug}.png`);
-const pdfPath = resolve(outputDirectory, `${slug}.pdf`);
-const manifestPath = resolve(outputDirectory, 'export-manifest.json');
-
-const browser = await chromium.launch({ headless: true });
-
-try {
-  const page = await browser.newPage({
-    viewport: { width: 1600, height: 1200 },
-    deviceScaleFactor: 1,
-  });
-
+async function prepareBoardPage(browser, targetUrl, boardId, viewport) {
+  const page = await browser.newPage({ viewport, deviceScaleFactor: 1 });
   await page.emulateMedia({ media: 'screen', reducedMotion: 'reduce' });
   await page.goto(targetUrl, { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
@@ -70,24 +50,58 @@ try {
   const box = await board.boundingBox();
   if (!box) throw new Error(`Unable to measure board ${boardId}`);
 
-  await board.screenshot({
+  return { page, board, box };
+}
+
+const args = parseArgs(process.argv.slice(2));
+const boardId = required(args, 'id');
+const route = required(args, 'route');
+const outputDirectory = resolve(required(args, 'out'));
+const slug = typeof args.slug === 'string' ? args.slug : boardId.replace(/-v\d+$/, '');
+const baseUrl = process.env.HNK_BOARD_BASE_URL ?? 'http://127.0.0.1:3000';
+const targetUrl = new URL(route, baseUrl).toString();
+
+await mkdir(outputDirectory, { recursive: true });
+
+const pngPath = resolve(outputDirectory, `${slug}.png`);
+const mobilePngPath = resolve(outputDirectory, `${slug}-mobile-390.png`);
+const pdfPath = resolve(outputDirectory, `${slug}.pdf`);
+const manifestPath = resolve(outputDirectory, 'export-manifest.json');
+
+const browser = await chromium.launch({ headless: true });
+
+try {
+  const desktopViewport = { width: 1600, height: 1200 };
+  const mobileViewport = { width: 390, height: 844 };
+
+  const desktop = await prepareBoardPage(browser, targetUrl, boardId, desktopViewport);
+
+  await desktop.board.screenshot({
     path: pngPath,
     type: 'png',
     animations: 'disabled',
   });
 
-  const documentSize = await page.evaluate(() => ({
+  const documentSize = await desktop.page.evaluate(() => ({
     width: Math.ceil(document.documentElement.scrollWidth),
     height: Math.ceil(document.documentElement.scrollHeight),
   }));
 
-  await page.pdf({
+  await desktop.page.pdf({
     path: pdfPath,
     printBackground: true,
     preferCSSPageSize: false,
     width: `${documentSize.width}px`,
     height: `${documentSize.height}px`,
     margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' },
+  });
+
+  const mobile = await prepareBoardPage(browser, targetUrl, boardId, mobileViewport);
+
+  await mobile.board.screenshot({
+    path: mobilePngPath,
+    type: 'png',
+    animations: 'disabled',
   });
 
   const manifest = {
@@ -97,21 +111,35 @@ try {
     sourceUrl: targetUrl,
     exportedAt: new Date().toISOString(),
     renderer: 'playwright/chromium',
-    viewport: { width: 1600, height: 1200, deviceScaleFactor: 1 },
+    viewport: { ...desktopViewport, deviceScaleFactor: 1 },
     boardBounds: {
-      width: Math.ceil(box.width),
-      height: Math.ceil(box.height),
+      width: Math.ceil(desktop.box.width),
+      height: Math.ceil(desktop.box.height),
+    },
+    mobileViewport: { ...mobileViewport, deviceScaleFactor: 1 },
+    mobileBoardBounds: {
+      width: Math.ceil(mobile.box.width),
+      height: Math.ceil(mobile.box.height),
     },
     outputs: [
       {
         kind: 'board-img',
         format: 'png',
+        target: 'desktop',
         path: pngPath,
         sha256: await sha256(pngPath),
       },
       {
+        kind: 'board-img-mobile',
+        format: 'png',
+        target: 'mobile-390',
+        path: mobilePngPath,
+        sha256: await sha256(mobilePngPath),
+      },
+      {
         kind: 'board-document-export',
         format: 'pdf',
+        target: 'print',
         path: pdfPath,
         sha256: await sha256(pdfPath),
       },
@@ -121,6 +149,7 @@ try {
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
   console.log(`Exported ${boardId}`);
   console.log(`PNG: ${pngPath}`);
+  console.log(`Mobile PNG: ${mobilePngPath}`);
   console.log(`PDF: ${pdfPath}`);
   console.log(`Manifest: ${manifestPath}`);
 } finally {
