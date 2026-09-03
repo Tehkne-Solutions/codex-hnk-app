@@ -1,5 +1,10 @@
-import { Day001VerticalSlice } from '../features/kether/Day001VerticalSlice';
+import { AtriumGate } from '../features/auth/AtriumGate';
+import { Day001LiveVerticalSlice } from '../features/kether/Day001LiveVerticalSlice';
 
 export default function HomeScreen() {
-  return <Day001VerticalSlice />;
+  return (
+    <AtriumGate>
+      <Day001LiveVerticalSlice />
+    </AtriumGate>
+  );
 }
