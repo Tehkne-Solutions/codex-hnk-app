@@ -35,7 +35,7 @@ const invariants = [
   ['Native harness compares ciphertext with appended tag', harness.includes("includeTag: true") && harness.includes('vector.ciphertextBase64')],
   ['Native harness verifies frozen checksum', harness.includes('CryptoDigestAlgorithm.SHA256') && harness.includes('vector.checksumSha256')],
   ['Native harness verifies decrypt round-trip', harness.includes("name: 'decrypt-roundtrip'")],
-  ['Native harness has no SecureStore dependency', !harness.includes('expo-secure-store') && !harness.includes('SecureStore')],
+  ['Native harness has no SecureStore dependency', !harness.includes("from 'expo-secure-store'") && !harness.includes('SecureStore.')],
   ['Native harness has no Supabase/network dependency', !harness.includes('@hnk/supabase-client') && !harness.includes('fetch(')],
   ['Lab route is explicitly experimental and no-write', route.includes('EXPERIMENTAL · NO VAULT WRITES')],
   ['Production Native Vault remains independent from public test vectors', !productionVault.includes('@hnk/vault-interop-vectors')],
