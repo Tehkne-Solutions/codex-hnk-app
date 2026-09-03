@@ -36,14 +36,7 @@ jobs:
         run: |
           mkdir -p artifacts/database-types
           supabase gen types typescript --local > artifacts/database-types/database.types.generated.ts
-          cat >> artifacts/database-types/database.types.generated.ts <<'EOF'
-
-export type PublicTables = Database["public"]["Tables"];
-export type TableName = keyof PublicTables;
-export type Row<T extends TableName> = PublicTables[T]["Row"];
-export type Insert<T extends TableName> = PublicTables[T]["Insert"];
-export type Update<T extends TableName> = PublicTables[T]["Update"];
-EOF
+          printf '\nexport type PublicTables = Database["public"]["Tables"];\nexport type TableName = keyof PublicTables;\nexport type Row<T extends TableName> = PublicTables[T]["Row"];\nexport type Insert<T extends TableName> = PublicTables[T]["Insert"];\nexport type Update<T extends TableName> = PublicTables[T]["Update"];\n' >> artifacts/database-types/database.types.generated.ts
           grep -q 'vault_key_envelopes' artifacts/database-types/database.types.generated.ts
           grep -q 'journal_vault' artifacts/database-types/database.types.generated.ts
           sha256sum artifacts/database-types/database.types.generated.ts > artifacts/database-types/SHA256SUMS
