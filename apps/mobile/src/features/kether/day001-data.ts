@@ -1,5 +1,9 @@
 export type Day001Source = 'supabase' | 'offline-bundle';
 
+// Editorial display title for the canonical Jachin doctrine passage.
+// The canonical body itself remains unchanged below and in the synchronized dataset.
+export const DAY001_JACHIN_DOCTRINE_TITLE = 'O abismo silencioso de Kether';
+
 export type Day001Snapshot = {
   day: 1;
   chapter: 1;
