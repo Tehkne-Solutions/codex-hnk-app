@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const required = [
   'packages/database/src/database.vault-key-envelopes.generated.ts',
   'packages/supabase-client/src/vault-key-envelopes.ts',
+  'packages/supabase-client/src/vault-key-envelopes.test.ts',
   'packages/supabase-client/src/index.ts',
   'supabase/migrations/20260903152500_add_vault_key_envelopes.sql',
   'supabase/tests/vault_key_envelopes.sql',
@@ -19,6 +20,7 @@ if (missing.length) {
 
 const generated = readFileSync('packages/database/src/database.vault-key-envelopes.generated.ts', 'utf8');
 const adapter = readFileSync('packages/supabase-client/src/vault-key-envelopes.ts', 'utf8');
+const adapterTest = readFileSync('packages/supabase-client/src/vault-key-envelopes.test.ts', 'utf8');
 const clientIndex = readFileSync('packages/supabase-client/src/index.ts', 'utf8');
 const migration = readFileSync('supabase/migrations/20260903152500_add_vault_key_envelopes.sql', 'utf8');
 const pgTap = readFileSync('supabase/tests/vault_key_envelopes.sql', 'utf8');
@@ -49,6 +51,10 @@ const invariants = [
   ['Adapter freezes HKDF-SHA-256', adapter.includes("kdfAlg: 'HKDF-SHA-256'") && adapter.includes("input.kdfAlg !== 'HKDF-SHA-256'")],
   ['Adapter freezes KDF info version 1', adapter.includes('kdfInfoVersion: 1') && adapter.includes('input.kdfInfoVersion !== 1')],
   ['Adapter exposes save/list/getActive/revoke only', ['saveRecoveryEnvelope', 'listRecoveryEnvelopes', 'getActiveRecoveryEnvelope', 'revokeRecoveryEnvelope'].every((name) => adapter.includes(`function ${name}`)) && !adapter.includes('rotateRecoveryEnvelope')],
+  ['Adapter contract tests cover save/list/getActive/revoke', ['saveRecoveryEnvelope', 'listRecoveryEnvelopes', 'getActiveRecoveryEnvelope', 'revokeRecoveryEnvelope'].every((name) => adapterTest.includes(name))],
+  ['Adapter contract tests prove auth-owned insert and no raw secret fields', adapterTest.includes('derives ownership from authenticated session') && adapterTest.includes("'plaintext' in insertCall[1]") && adapterTest.includes("'rrs' in insertCall[1]") && adapterTest.includes("'vdk' in insertCall[1]")],
+  ['Adapter contract tests prove active/revoked semantics', adapterTest.includes("call[1] === 'revoked_at'") && adapterTest.includes('returns null when no active envelope exists')],
+  ['Adapter contract tests reject frozen-contract mismatch', adapterTest.includes('vault_recovery_envelope_contract_mismatch')],
   ['Migration remains owner-only RLS', migration.includes('vault_key_envelopes_select_own') && migration.includes('vault_key_envelopes_insert_own') && migration.includes('vault_key_envelopes_update_own') && migration.includes('vault_key_envelopes_delete_own')],
   ['pgTAP still carries 20 envelope assertions', pgTap.includes('select plan(20)') && pgTap.includes('VKE-020')],
   ['Web Day 001 remains disconnected from adapter', !webDay001.includes('saveRecoveryEnvelope') && !webDay001.includes('vault-key-envelopes')],
