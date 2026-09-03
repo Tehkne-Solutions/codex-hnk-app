@@ -1,0 +1,61 @@
+name: HNK Database Types Proof
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'packages/database/src/database.types.ts'
+      - '.github/workflows/database-types-proof.yml'
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'packages/database/src/database.types.ts'
+      - '.github/workflows/database-types-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  generate-types:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Generate database types from migrated schema
+        run: |
+          mkdir -p artifacts/database-types
+          supabase gen types typescript --local > artifacts/database-types/database.types.generated.ts
+          cat >> artifacts/database-types/database.types.generated.ts <<'EOF'
+
+export type PublicTables = Database["public"]["Tables"];
+export type TableName = keyof PublicTables;
+export type Row<T extends TableName> = PublicTables[T]["Row"];
+export type Insert<T extends TableName> = PublicTables[T]["Insert"];
+export type Update<T extends TableName> = PublicTables[T]["Update"];
+EOF
+          grep -q 'vault_key_envelopes' artifacts/database-types/database.types.generated.ts
+          grep -q 'journal_vault' artifacts/database-types/database.types.generated.ts
+          sha256sum artifacts/database-types/database.types.generated.ts > artifacts/database-types/SHA256SUMS
+
+      - name: Upload generated type proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnk-database-types-generated
+          path: artifacts/database-types
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
