@@ -27,6 +27,7 @@ type LiveCanonSnapshot = {
   xp: 150;
   tracks: string[];
   sourceSha: string;
+  hasCanonicalManuscript: true;
 };
 
 const SCENES: Scene[] = [
@@ -58,6 +59,11 @@ function createClientSessionId(userId: string): string {
 
 function parseCanonRow(row: Record<string, unknown> | null): LiveCanonSnapshot | null {
   if (!row) return null;
+  const content = typeof row.content === 'object' && row.content !== null
+    ? row.content as Record<string, unknown>
+    : null;
+  const rawMarkdown = content?.raw_markdown;
+
   if (
     row.day !== 1 ||
     row.chapter !== 1 ||
@@ -68,7 +74,9 @@ function parseCanonRow(row: Record<string, unknown> | null): LiveCanonSnapshot |
     row.xp !== 150 ||
     typeof row.source_sha !== 'string' ||
     !Array.isArray(row.tracks) ||
-    !row.tracks.every((track) => typeof track === 'string')
+    !row.tracks.every((track) => typeof track === 'string') ||
+    typeof rawMarkdown !== 'string' ||
+    rawMarkdown.trim().length === 0
   ) {
     return null;
   }
@@ -83,6 +91,7 @@ function parseCanonRow(row: Record<string, unknown> | null): LiveCanonSnapshot |
     xp: 150,
     tracks: row.tracks as string[],
     sourceSha: row.source_sha,
+    hasCanonicalManuscript: true,
   };
 }
 
@@ -116,7 +125,7 @@ export function Day001WebExperience() {
     setRuntimeError(null);
     void runtime.client
       .from('codex_days')
-      .select('day,chapter,sephira,world,angel,level,xp,tracks,source_sha')
+      .select('day,chapter,sephira,world,angel,level,xp,tracks,source_sha,content')
       .eq('day', 1)
       .limit(1)
       .maybeSingle()
@@ -141,8 +150,9 @@ export function Day001WebExperience() {
 
   const geometryLevel = useMemo(() => Math.min(index, 12), [index]);
   const mirrorSecurityBlocked = live && scene.key === 'mirror';
+  const crossingAwaitingCanon = live && scene.key === 'crossing' && !canon;
   const canAdvance =
-    runtimeBusy ? false :
+    runtimeBusy || crossingAwaitingCanon ? false :
     scene.key === 'intention' ? intention.trim().length > 0 :
     scene.key === 'contract' ? contract :
     scene.key === 'mirror' ? mirror.trim().length > 0 && !mirrorSecurityBlocked : true;
@@ -157,7 +167,7 @@ export function Day001WebExperience() {
     if (!canAdvance) return;
     setRuntimeError(null);
 
-    if (scene.key === 'crossing' && live && runtime.client && runtime.userId && !practice) {
+    if (scene.key === 'crossing' && live && runtime.client && runtime.userId && canon && !practice) {
       setRuntimeBusy(true);
       try {
         const session = await startPracticeSession(runtime.client, {
@@ -178,8 +188,8 @@ export function Day001WebExperience() {
     setIndex((value) => Math.min(SCENES.length - 1, value + 1));
   }
 
-  const crownWorld = canon?.world ?? 'ATZILUTH';
-  const crownAngel = canon?.angel ?? 'VEHUIAH';
+  const crownWorld = (canon?.world ?? 'ATZILUTH').toUpperCase();
+  const crownAngel = (canon?.angel ?? 'VEHUIAH').toUpperCase();
   const crownXp = canon?.xp ?? 150;
 
   return (
@@ -236,15 +246,19 @@ export function Day001WebExperience() {
 
         {scene.key === 'manuscript' && live ? (
           <p className={liveStyles.sourceNote}>
-            {canon
-              ? `MANUSCRITO VINCULADO AO DATASET CANÔNICO · SOURCE ${canon.sourceSha.slice(0, 12)}`
-              : 'O MANUSCRITO NÃO É DECLARADO LIVE ATÉ O SNAPSHOT SER VALIDADO.'}
+            {canon?.hasCanonicalManuscript
+              ? `MANUSCRITO VALIDADO NO DATASET CANÔNICO · SOURCE ${canon.sourceSha.slice(0, 12)}`
+              : 'O MANUSCRITO NÃO É DECLARADO LIVE ATÉ O RAW MARKDOWN SER VALIDADO.'}
           </p>
         ) : null}
 
         {scene.key === 'crossing' && live ? (
           <p className={liveStyles.sourceNote}>
-            {practice ? `PRACTICE SESSION · ${practice.id.slice(0, 8)}` : 'A PRÓXIMA AÇÃO CRIA UMA PRACTICE SESSION CANÔNICA.'}
+            {practice
+              ? `PRACTICE SESSION · ${practice.id.slice(0, 8)}`
+              : canon
+                ? 'A PRÓXIMA AÇÃO CRIA UMA PRACTICE SESSION CANÔNICA.'
+                : 'AGUARDANDO VALIDAÇÃO DO CÂNONE ANTES DE ABRIR A TRAVESSIA.'}
           </p>
         ) : null}
 
@@ -316,11 +330,13 @@ export function Day001WebExperience() {
               ? 'CRIANDO SESSÃO…'
               : mirrorSecurityBlocked
                 ? 'SELO WEB BLOQUEADO · CONTINUE NO MOBILE'
-                : scene.key === 'void'
-                  ? 'TOCAR A ORIGEM'
-                  : scene.key === 'tree'
-                    ? 'PASSAR ADIANTE'
-                    : 'CONTINUAR'}
+                : crossingAwaitingCanon
+                  ? 'VALIDANDO CÂNONE…'
+                  : scene.key === 'void'
+                    ? 'TOCAR A ORIGEM'
+                    : scene.key === 'tree'
+                      ? 'PASSAR ADIANTE'
+                      : 'CONTINUAR'}
           </button>
         ) : (
           <div className={styles.finalState}>KETHER · 001 / 036 · VEHUIAH 1 / 5 · NEÓFITO</div>
@@ -331,7 +347,7 @@ export function Day001WebExperience() {
         <footer className={styles.footer}>
           <span>VISUAL PASS V2</span>
           <span>REDUCED MOTION READY</span>
-          <span>{live ? 'CANON/SSESSION LIVE · VAULT BLOCKED' : 'CANON COPY NOT DUPLICATED'}</span>
+          <span>{live ? 'CANON/SESSION LIVE · VAULT BLOCKED' : 'CANON COPY NOT DUPLICATED'}</span>
         </footer>
       ) : null}
     </main>
