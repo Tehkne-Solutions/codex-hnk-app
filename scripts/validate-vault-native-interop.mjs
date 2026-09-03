@@ -43,6 +43,8 @@ const invariants = [
   ['Lab route CI autorun is gated to Android/iOS', route.includes('EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN') && route.includes("Platform.OS === 'android'") && route.includes("Platform.OS === 'ios'")],
   ['Lab route exposes redacted accessibility evidence', route.includes('native-interop-status-${result.status}') && route.includes("native-interop-check-${check.name}-${check.ok ? 'PASS' : 'FAIL'}")],
   ['Android proof workflow pins emulator action commit', androidWorkflow.includes('ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d') && !androidWorkflow.includes('android-emulator-runner@v2')],
+  ['Android proof workflow pins setup-java v5 commit', androidWorkflow.includes('actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961') && !androidWorkflow.includes('actions/setup-java@v4')],
+  ['Android proof custom script remains POSIX-sh compatible at entry', androidWorkflow.includes('script: |\n            set -eu') && !androidWorkflow.includes('pipefail')],
   ['Android proof executes release native app without Metro', androidWorkflow.includes('expo run:android --variant release --no-bundler')],
   ['Android proof verifies all four frozen checks through native UI', ['nonce-exact', 'ciphertext-tag-exact', 'checksum-exact', 'decrypt-roundtrip'].every((name) => androidWorkflow.includes(name)) && androidWorkflow.includes('uiautomator dump')],
   ['Android proof uploads only redacted proof surface', androidWorkflow.includes('hnk-native-vault-android-interop-v1') && androidWorkflow.includes('secrets-captured=NO') && !androidWorkflow.includes('vdkHex') && !androidWorkflow.includes('recoveryRootSecret')],

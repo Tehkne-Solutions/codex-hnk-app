@@ -41,7 +41,7 @@ jobs:
           node-version: 22.13.0
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
         with:
           distribution: temurin
           java-version: '17'
@@ -67,7 +67,7 @@ jobs:
           profile: pixel_7
           disable-animations: true
           script: |
-            set -euo pipefail
+            set -eu
             mkdir -p artifacts/native-android-interop
 
             pnpm --filter @hnk/mobile exec expo prebuild --platform android --clean --no-install
