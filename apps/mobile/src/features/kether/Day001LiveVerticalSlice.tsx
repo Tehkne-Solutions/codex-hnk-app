@@ -1,1 +1,1 @@
-export { Day001MasterVerticalSlice as Day001LiveVerticalSlice } from './Day001MasterVerticalSlice';
+export { Day001ImmersiveMobileVerticalSlice as Day001LiveVerticalSlice } from './Day001ImmersiveMobileVerticalSlice';
