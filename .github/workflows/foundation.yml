@@ -32,6 +32,9 @@ jobs:
       - name: Validate architecture baseline
         run: pnpm validate:architecture
 
+      - name: Validate HNK UI tokens
+        run: pnpm validate:ui
+
       - name: Validate Board Factory
         run: pnpm validate:boards
 
