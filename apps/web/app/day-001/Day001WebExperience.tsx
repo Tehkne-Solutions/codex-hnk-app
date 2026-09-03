@@ -52,7 +52,7 @@ export function Day001WebExperience() {
   }
 
   return (
-    <main className={styles.shell} data-hnk-theme="kether">
+    <main className={styles.shell} data-hnk-theme="kether" data-scene={scene.key}>
       {index >= 3 ? (
         <header className={styles.hud}>
           <div>
@@ -124,6 +124,8 @@ export function Day001WebExperience() {
         {scene.key === 'tree' || scene.key === 'atrium' ? (
           <div className={styles.tree} aria-label="Kether aceso na Árvore da Vida">
             <i className={styles.treeStem} />
+            <i className={`${styles.treeBranch} ${styles.treeBranchLeft}`} />
+            <i className={`${styles.treeBranch} ${styles.treeBranchRight}`} />
             <i className={`${styles.treeNode} ${styles.kether}`}><b /></i>
             <i className={`${styles.treeNode} ${styles.chokmah}`} />
             <i className={`${styles.treeNode} ${styles.binah}`} />
