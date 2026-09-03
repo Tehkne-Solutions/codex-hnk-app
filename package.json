@@ -16,8 +16,9 @@
     "validate:ui": "node scripts/validate-ui-tokens.mjs",
     "validate:day001": "node scripts/validate-day001-master.mjs",
     "validate:boards": "node scripts/validate-boards.mjs",
+    "validate:vault-web-crypto": "node scripts/validate-vault-web-crypto-lab.mjs",
     "export:board": "node scripts/export-board.mjs",
-    "check": "pnpm validate:architecture && pnpm validate:ui && pnpm validate:day001 && pnpm validate:boards && turbo run lint typecheck test"
+    "check": "pnpm validate:architecture && pnpm validate:ui && pnpm validate:day001 && pnpm validate:boards && pnpm validate:vault-web-crypto && turbo run lint typecheck test"
   },
   "devDependencies": {
     "playwright": "1.55.0",

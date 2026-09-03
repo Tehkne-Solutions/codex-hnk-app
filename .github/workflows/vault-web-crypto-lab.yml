@@ -1,0 +1,94 @@
+name: HNK Web Vault Crypto Lab
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/vault-web-crypto-lab/**'
+      - 'apps/web/app/labs/vault-crypto/**'
+      - 'scripts/verify-vault-web-crypto-lab.mjs'
+      - 'scripts/validate-vault-web-crypto-lab.mjs'
+      - 'docs/security/HNK_WEB_E2EE_KEY_RECOVERY_V1_PROPOSAL.md'
+      - '.github/workflows/vault-web-crypto-lab.yml'
+  pull_request:
+    paths:
+      - 'packages/vault-web-crypto-lab/**'
+      - 'apps/web/app/labs/vault-crypto/**'
+      - 'scripts/verify-vault-web-crypto-lab.mjs'
+      - 'scripts/validate-vault-web-crypto-lab.mjs'
+      - 'docs/security/HNK_WEB_E2EE_KEY_RECOVERY_V1_PROPOSAL.md'
+      - '.github/workflows/vault-web-crypto-lab.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-crypto-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HNK_VAULT_LAB_BASE_URL: http://127.0.0.1:3000
+      HNK_VAULT_LAB_OUT: artifacts/vault-web-crypto-lab
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.1.0
+          run_install: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+
+      - name: Install workspace
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Validate security boundary
+        run: pnpm validate:vault-web-crypto
+
+      - name: Run deterministic crypto vectors
+        run: pnpm --filter @hnk/vault-web-crypto-lab test
+
+      - name: Build Web lab
+        run: pnpm --filter @hnk/web build
+
+      - name: Start Web lab
+        run: |
+          pnpm --filter @hnk/web exec next start -H 127.0.0.1 -p 3000 > /tmp/hnk-vault-lab.log 2>&1 &
+          echo $! > /tmp/hnk-vault-lab.pid
+
+      - name: Wait for lab route
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent "$HNK_VAULT_LAB_BASE_URL/labs/vault-crypto" > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/hnk-vault-lab.log
+          exit 1
+
+      - name: Run Chromium IndexedDB acceptance
+        run: node scripts/verify-vault-web-crypto-lab.mjs
+
+      - name: Upload crypto-lab proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnk-web-vault-crypto-lab-v1
+          path: artifacts/vault-web-crypto-lab
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Stop Web lab
+        if: always()
+        run: |
+          if [ -f /tmp/hnk-vault-lab.pid ]; then
+            kill "$(cat /tmp/hnk-vault-lab.pid)" || true
+          fi
