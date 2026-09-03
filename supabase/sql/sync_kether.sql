@@ -1,8 +1,8 @@
 -- Kether sync baseline.
--- Replace the commit SHA before each privileged run.
+-- Canon freeze projection verified 36/36 against this commit.
 select *
 from hnk_private.sync_codex_range(
   1,
   36,
-  'eeb1be4ff704e2bd4cd598e4d5bc2bc449a26c83'
+  '968e8dc2050e7d2a076fc4e892e727e0772594a5'
 );
