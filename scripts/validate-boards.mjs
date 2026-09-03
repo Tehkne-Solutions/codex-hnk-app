@@ -27,11 +27,14 @@ const rendererSource = readFileSync('apps/web/app/boards/_components/HnkBoardRen
 const exporterSource = readFileSync('scripts/export-board.mjs', 'utf8');
 const exportWorkflow = readFileSync('.github/workflows/board-export.yml', 'utf8');
 
+const hasValidPreApprovalLifecycle =
+  boardSource.includes("lifecycle: 'structured'") || boardSource.includes("lifecycle: 'rendered'");
+
 const invariants = [
   ['Board as Data decision', systemDoc.includes('Board as Data')],
   ['chapter-overview family', systemDoc.includes('chapter-overview')],
   ['stable Kether board id', boardSource.includes('kether-chapter-overview-v1')],
-  ['structured lifecycle', boardSource.includes("lifecycle: 'structured'")],
+  ['valid pre-approval lifecycle', hasValidPreApprovalLifecycle],
   ['lossless PNG board-img output', boardSource.includes('kether-chapter-overview.png')],
   ['board-img output', boardSource.includes("kind: 'board-img'")],
   ['board-doc output', boardSource.includes("kind: 'board-doc'")],
