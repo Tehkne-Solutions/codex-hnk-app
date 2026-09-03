@@ -3,6 +3,7 @@ import type { Database } from '@hnk/database';
 
 export * from './practice-record';
 export * from './promotion-sync';
+export * from './vault';
 
 export type HnkSupabaseClient = SupabaseClient<Database>;
 
