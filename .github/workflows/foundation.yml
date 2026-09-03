@@ -35,6 +35,9 @@ jobs:
       - name: Validate HNK UI tokens
         run: pnpm validate:ui
 
+      - name: Validate Day 001 master slice
+        run: pnpm validate:day001
+
       - name: Validate Board Factory
         run: pnpm validate:boards
 
