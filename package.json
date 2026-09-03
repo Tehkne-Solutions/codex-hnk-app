@@ -13,9 +13,10 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "validate:architecture": "node scripts/validate-architecture.mjs",
+    "validate:ui": "node scripts/validate-ui-tokens.mjs",
     "validate:boards": "node scripts/validate-boards.mjs",
     "export:board": "node scripts/export-board.mjs",
-    "check": "pnpm validate:architecture && pnpm validate:boards && turbo run lint typecheck test"
+    "check": "pnpm validate:architecture && pnpm validate:ui && pnpm validate:boards && turbo run lint typecheck test"
   },
   "devDependencies": {
     "playwright": "1.55.0",
