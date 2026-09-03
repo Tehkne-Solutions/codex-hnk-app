@@ -30,13 +30,13 @@ export function HnkBoardRenderer({ board }: HnkBoardRendererProps) {
           </div>
 
           <div className={styles.crownField} aria-hidden="true">
-            <div className={styles.crownOrbit crownOrbitOne} />
-            <div className={styles.crownOrbit crownOrbitTwo} />
-            <div className={styles.crownOrbit crownOrbitThree} />
+            <div className={`${styles.crownOrbit} ${styles.crownOrbitOne}`} />
+            <div className={`${styles.crownOrbit} ${styles.crownOrbitTwo}`} />
+            <div className={`${styles.crownOrbit} ${styles.crownOrbitThree}`} />
             <div className={styles.crownAxis} />
             <div className={styles.crownOrigin} />
-            <div className={styles.crownRay crownRayLeft} />
-            <div className={styles.crownRay crownRayRight} />
+            <div className={`${styles.crownRay} ${styles.crownRayLeft}`} />
+            <div className={`${styles.crownRay} ${styles.crownRayRight}`} />
           </div>
         </header>
 
