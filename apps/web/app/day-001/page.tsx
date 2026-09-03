@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Day001ImmersiveExperience } from './Day001ImmersiveExperience';
 import { WebAtriumBoundary, WebDay001RuntimeProvider } from './WebDay001Runtime';
+import artStyles from './day001-art-pass-v2.module.css';
 
 export const metadata: Metadata = {
   title: 'Dia 001 · Kether · HNK Codex',
@@ -9,10 +10,12 @@ export const metadata: Metadata = {
 
 export default function Day001Page() {
   return (
-    <WebDay001RuntimeProvider>
-      <WebAtriumBoundary>
-        <Day001ImmersiveExperience />
-      </WebAtriumBoundary>
-    </WebDay001RuntimeProvider>
+    <div className={artStyles.artPass}>
+      <WebDay001RuntimeProvider>
+        <WebAtriumBoundary>
+          <Day001ImmersiveExperience />
+        </WebAtriumBoundary>
+      </WebDay001RuntimeProvider>
+    </div>
   );
 }
