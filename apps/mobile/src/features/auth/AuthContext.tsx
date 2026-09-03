@@ -107,6 +107,7 @@ export function HnkAuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!hnkSupabase) return;
+    const client = hnkSupabase;
     let active = true;
 
     async function consumeAuthCallback(url: string): Promise<void> {
@@ -122,13 +123,13 @@ export function HnkAuthProvider({ children }: PropsWithChildren) {
 
       try {
         if (callback.kind === 'tokens') {
-          const { error } = await hnkSupabase.auth.setSession({
+          const { error } = await client.auth.setSession({
             access_token: callback.accessToken,
             refresh_token: callback.refreshToken,
           });
           if (error) throw error;
         } else {
-          const { error } = await hnkSupabase.auth.exchangeCodeForSession(callback.code);
+          const { error } = await client.auth.exchangeCodeForSession(callback.code);
           if (error) throw error;
         }
 
