@@ -65,7 +65,7 @@ try {
       const page = await prepare(browser, mode.viewport);
       await reach(page, target.title);
       const path = resolve(outputDirectory, `day001-${target.name}-${mode.key}.png`);
-      await page.locator('main[data-hnk-theme="kether"]').screenshot({
+      await page.screenshot({
         path,
         type: 'png',
         fullPage: true,
