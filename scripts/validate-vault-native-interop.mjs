@@ -5,6 +5,7 @@ const required = [
   'packages/vault-interop-vectors/src/index.ts',
   'apps/mobile/src/features/vault/NativeVaultInteropHarness.ts',
   'apps/mobile/src/app/labs/vault-interop.tsx',
+  '.github/workflows/vault-native-android-interop.yml',
   'docs/security/HNK_WEB_E2EE_EXECUTABLE_SPEC_V1_CANDIDATE.md',
 ];
 
@@ -18,6 +19,7 @@ if (missing.length) {
 const vector = readFileSync('packages/vault-interop-vectors/src/index.ts', 'utf8');
 const harness = readFileSync('apps/mobile/src/features/vault/NativeVaultInteropHarness.ts', 'utf8');
 const route = readFileSync('apps/mobile/src/app/labs/vault-interop.tsx', 'utf8');
+const androidWorkflow = readFileSync('.github/workflows/vault-native-android-interop.yml', 'utf8');
 const mobilePackage = readFileSync('apps/mobile/package.json', 'utf8');
 const webVectors = readFileSync('packages/vault-web-crypto-lab/src/vectors.ts', 'utf8');
 const productionVault = readFileSync('apps/mobile/src/features/vault/vault-crypto.ts', 'utf8');
@@ -38,9 +40,15 @@ const invariants = [
   ['Native harness has no SecureStore dependency', !harness.includes("from 'expo-secure-store'") && !harness.includes('SecureStore.')],
   ['Native harness has no Supabase/network dependency', !harness.includes('@hnk/supabase-client') && !harness.includes('fetch(')],
   ['Lab route is explicitly experimental and no-write', route.includes('EXPERIMENTAL · NO VAULT WRITES')],
+  ['Lab route CI autorun is gated to Android/iOS', route.includes('EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN') && route.includes("Platform.OS === 'android'") && route.includes("Platform.OS === 'ios'")],
+  ['Lab route exposes redacted accessibility evidence', route.includes('native-interop-status-${result.status}') && route.includes("native-interop-check-${check.name}-${check.ok ? 'PASS' : 'FAIL'}")],
+  ['Android proof workflow pins emulator action commit', androidWorkflow.includes('ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d') && !androidWorkflow.includes('android-emulator-runner@v2')],
+  ['Android proof executes release native app without Metro', androidWorkflow.includes('expo run:android --variant release --no-bundler')],
+  ['Android proof verifies all four frozen checks through native UI', ['nonce-exact', 'ciphertext-tag-exact', 'checksum-exact', 'decrypt-roundtrip'].every((name) => androidWorkflow.includes(name)) && androidWorkflow.includes('uiautomator dump')],
+  ['Android proof uploads only redacted proof surface', androidWorkflow.includes('hnk-native-vault-android-interop-v1') && androidWorkflow.includes('secrets-captured=NO') && !androidWorkflow.includes('vdkHex') && !androidWorkflow.includes('recoveryRootSecret')],
   ['Production Native Vault remains independent from public test vectors', !productionVault.includes('@hnk/vault-interop-vectors')],
   ['Day 001 remains disconnected from Native interop harness', !day001.includes('NativeVaultInteropHarness') && !day001.includes('@hnk/vault-interop-vectors')],
-  ['Executable spec still treats actual device proof as pending', spec.includes('NATIVE DEVICE VECTOR PROOF = PENDING')],
+  ['Executable spec still treats actual device proof as pending until runtime evidence lands', spec.includes('NATIVE DEVICE VECTOR PROOF = PENDING')],
 ];
 
 const failed = invariants.filter(([, ok]) => !ok);

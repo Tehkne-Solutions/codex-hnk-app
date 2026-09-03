@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   runNativeVaultInteropVector,
   type NativeVaultInteropResult,
 } from '../../features/vault/NativeVaultInteropHarness';
 
+const AUTO_RUN = process.env.EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN === '1';
+
 export default function NativeVaultInteropLabRoute() {
   const [result, setResult] = useState<NativeVaultInteropResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoRunStarted = useRef(false);
 
   async function run() {
     setBusy(true);
@@ -23,6 +26,17 @@ export default function NativeVaultInteropLabRoute() {
     }
   }
 
+  useEffect(() => {
+    if (
+      AUTO_RUN &&
+      !autoRunStarted.current &&
+      (Platform.OS === 'android' || Platform.OS === 'ios')
+    ) {
+      autoRunStarted.current = true;
+      void run();
+    }
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.shell}>
       <Text style={styles.eyebrow}>HNK SECURITY LAB · EXPERIMENTAL · NO VAULT WRITES</Text>
@@ -34,17 +48,44 @@ export default function NativeVaultInteropLabRoute() {
       <View style={styles.meta}>
         <Text style={styles.metaText}>PLATFORM · {Platform.OS.toUpperCase()}</Text>
         <Text style={styles.metaText}>REQUIRED · ANDROID / IOS</Text>
+        {AUTO_RUN ? <Text style={styles.metaText}>CI MODE · AUTO RUN</Text> : null}
       </View>
-      <Pressable style={[styles.button, busy && styles.buttonDisabled]} disabled={busy} onPress={() => void run()}>
+      <Pressable
+        testID="native-interop-run"
+        accessibilityLabel="native-interop-run"
+        style={[styles.button, busy && styles.buttonDisabled]}
+        disabled={busy}
+        onPress={() => void run()}
+      >
         <Text style={styles.buttonText}>{busy ? 'EXECUTANDO…' : 'EXECUTAR VETOR NATIVO'}</Text>
       </Pressable>
-      {error ? <Text style={styles.error}>FAIL · {error}</Text> : null}
+      {error ? (
+        <Text
+          testID="native-interop-error"
+          accessibilityLabel="native-interop-error"
+          style={styles.error}
+        >
+          FAIL · {error}
+        </Text>
+      ) : null}
       {result ? (
-        <View style={styles.result}>
-          <Text style={styles.status}>{result.status}</Text>
-          <Text style={styles.vector}>{result.vectorId}</Text>
+        <View testID="native-interop-result" style={styles.result}>
+          <Text
+            testID="native-interop-status"
+            accessibilityLabel={`native-interop-status-${result.status}`}
+            style={styles.status}
+          >
+            {result.status}
+          </Text>
+          <Text testID="native-interop-vector" style={styles.vector}>{result.vectorId}</Text>
           {result.checks.map((check) => (
-            <View key={check.name} style={styles.checkRow}>
+            <View
+              accessible
+              accessibilityLabel={`native-interop-check-${check.name}-${check.ok ? 'PASS' : 'FAIL'}`}
+              testID={`native-interop-check-${check.name}`}
+              key={check.name}
+              style={styles.checkRow}
+            >
               <Text style={styles.checkName}>{check.name}</Text>
               <Text style={styles.checkValue}>{check.ok ? 'PASS' : 'FAIL'}</Text>
             </View>

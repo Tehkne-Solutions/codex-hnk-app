@@ -1,0 +1,134 @@
+name: HNK Native Vault Android Interop Proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/src/features/vault/NativeVaultInteropHarness.ts'
+      - 'apps/mobile/src/app/labs/vault-interop.tsx'
+      - 'apps/mobile/app.json'
+      - 'apps/mobile/package.json'
+      - 'packages/vault-interop-vectors/**'
+      - 'pnpm-lock.yaml'
+      - 'scripts/validate-vault-native-interop.mjs'
+      - '.github/workflows/vault-native-android-interop.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android-native-interop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CI: 'true'
+      EXPO_PUBLIC_HNK_NATIVE_INTEROP_AUTORUN: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.1.0
+          run_install: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install workspace
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Validate shared Native interop contract
+        run: pnpm validate:vault-native-interop
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Execute frozen vector in Android native runtime
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            mkdir -p artifacts/native-android-interop
+
+            pnpm --filter @hnk/mobile exec expo prebuild --platform android --clean --no-install
+            pnpm --filter @hnk/mobile exec expo run:android --variant release --no-bundler
+
+            adb shell am force-stop com.tehknesolutions.codexhnk
+            adb shell am start -W \
+              -a android.intent.action.VIEW \
+              -d 'hnk:///labs/vault-interop' \
+              com.tehknesolutions.codexhnk
+
+            proof_xml='artifacts/native-android-interop/window.xml'
+            success=0
+            for attempt in $(seq 1 60); do
+              adb shell uiautomator dump /sdcard/hnk-native-interop.xml >/dev/null 2>&1 || true
+              adb pull /sdcard/hnk-native-interop.xml "$proof_xml" >/dev/null 2>&1 || true
+              if [ -f "$proof_xml" ] && grep -q 'content-desc="native-interop-status-PASS"' "$proof_xml"; then
+                success=1
+                break
+              fi
+              sleep 2
+            done
+
+            adb exec-out screencap -p > artifacts/native-android-interop/screen.png || true
+
+            if [ "$success" -ne 1 ]; then
+              echo 'Android native interop did not reach PASS.'
+              if [ -f "$proof_xml" ]; then cat "$proof_xml"; fi
+              exit 1
+            fi
+
+            for check in nonce-exact ciphertext-tag-exact checksum-exact decrypt-roundtrip; do
+              grep -q "content-desc=\"native-interop-check-${check}-PASS\"" "$proof_xml"
+            done
+
+            if grep -q 'native-interop-status-NATIVE_DEVICE_REQUIRED\|native-interop-status-FAIL\|native-interop-check-.*-FAIL' "$proof_xml"; then
+              echo 'Android native interop exposed a failing status.'
+              exit 1
+            fi
+
+            android_release="$(adb shell getprop ro.build.version.release | tr -d '\r')"
+            android_sdk="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
+            cat > artifacts/native-android-interop/proof.txt <<EOF
+            HNK Vault Native Interop Proof V1
+            platform=android
+            android_release=${android_release}
+            android_sdk=${android_sdk}
+            vector=HNK Native-Web vector 001
+            nonce-exact=PASS
+            ciphertext-tag-exact=PASS
+            checksum-exact=PASS
+            decrypt-roundtrip=PASS
+            secrets-captured=NO
+            EOF
+            sha256sum artifacts/native-android-interop/proof.txt artifacts/native-android-interop/window.xml > artifacts/native-android-interop/SHA256SUMS
+
+      - name: Upload redacted Android interop proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnk-native-vault-android-interop-v1
+          path: artifacts/native-android-interop
+          retention-days: 30
+          if-no-files-found: warn
