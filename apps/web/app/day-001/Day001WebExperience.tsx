@@ -1,14 +1,32 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  startPracticeSession,
+  type PracticeSessionRecord,
+} from '@hnk/supabase-client';
 import styles from './day001.module.css';
 import review from './day001-review.module.css';
+import liveStyles from './web-live.module.css';
+import { useWebDay001Runtime } from './WebDay001Runtime';
 
 type Scene = {
   key: string;
   eyebrow: string;
   title: string;
   body: string;
+};
+
+type LiveCanonSnapshot = {
+  day: 1;
+  chapter: 1;
+  sephira: 'Kether';
+  world: 'Atziluth';
+  angel: 'Vehuiah';
+  level: 1;
+  xp: 150;
+  tracks: string[];
+  sourceSha: string;
 };
 
 const SCENES: Scene[] = [
@@ -34,19 +52,100 @@ const SCENES: Scene[] = [
   { key: 'atrium', eyebrow: 'O ÁTRIO · TRANSFORMADO', title: 'Agora existe uma luz.', body: 'A primeira centelha permanece como memória espacial do progresso.' },
 ];
 
+function createClientSessionId(userId: string): string {
+  return `hnk-web-d001-${userId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function parseCanonRow(row: Record<string, unknown> | null): LiveCanonSnapshot | null {
+  if (!row) return null;
+  if (
+    row.day !== 1 ||
+    row.chapter !== 1 ||
+    row.sephira !== 'Kether' ||
+    row.world !== 'Atziluth' ||
+    row.angel !== 'Vehuiah' ||
+    row.level !== 1 ||
+    row.xp !== 150 ||
+    typeof row.source_sha !== 'string' ||
+    !Array.isArray(row.tracks) ||
+    !row.tracks.every((track) => typeof track === 'string')
+  ) {
+    return null;
+  }
+
+  return {
+    day: 1,
+    chapter: 1,
+    sephira: 'Kether',
+    world: 'Atziluth',
+    angel: 'Vehuiah',
+    level: 1,
+    xp: 150,
+    tracks: row.tracks as string[],
+    sourceSha: row.source_sha,
+  };
+}
+
 export function Day001WebExperience() {
+  const runtime = useWebDay001Runtime();
   const [index, setIndex] = useState(0);
   const [intention, setIntention] = useState('');
   const [mirror, setMirror] = useState('');
   const [contract, setContract] = useState(false);
+  const [canon, setCanon] = useState<LiveCanonSnapshot | null>(null);
+  const [practice, setPractice] = useState<PracticeSessionRecord | null>(null);
+  const [runtimeBusy, setRuntimeBusy] = useState(false);
+  const [runtimeError, setRuntimeError] = useState<string | null>(null);
+
   const scene = SCENES[index];
   const progress = `${String(index + 1).padStart(2, '0')} / ${SCENES.length}`;
+  const live = Boolean(
+    runtime.configured &&
+    runtime.phase === 'signed-in' &&
+    runtime.client &&
+    runtime.userId,
+  );
+
+  useEffect(() => {
+    if (!live || !runtime.client) {
+      setCanon(null);
+      return;
+    }
+
+    let active = true;
+    setRuntimeError(null);
+    void runtime.client
+      .from('codex_days')
+      .select('day,chapter,sephira,world,angel,level,xp,tracks,source_sha')
+      .eq('day', 1)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          setRuntimeError('Não foi possível validar o snapshot canônico do Dia 001 no servidor.');
+          return;
+        }
+        const snapshot = parseCanonRow(data as Record<string, unknown> | null);
+        if (!snapshot) {
+          setRuntimeError('O servidor respondeu, mas o snapshot do Dia 001 não corresponde ao contrato congelado.');
+          return;
+        }
+        setCanon(snapshot);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [live, runtime.client]);
 
   const geometryLevel = useMemo(() => Math.min(index, 12), [index]);
+  const mirrorSecurityBlocked = live && scene.key === 'mirror';
   const canAdvance =
+    runtimeBusy ? false :
     scene.key === 'intention' ? intention.trim().length > 0 :
     scene.key === 'contract' ? contract :
-    scene.key === 'mirror' ? mirror.trim().length > 0 : true;
+    scene.key === 'mirror' ? mirror.trim().length > 0 && !mirrorSecurityBlocked : true;
   const reviewSceneClass = scene.key === 'relic'
     ? review.relicScene
     : scene.key === 'atrium'
@@ -54,9 +153,34 @@ export function Day001WebExperience() {
       : '';
   const reduceOrigin = scene.key === 'relic' || scene.key === 'atrium';
 
-  function next() {
+  async function advance() {
+    if (!canAdvance) return;
+    setRuntimeError(null);
+
+    if (scene.key === 'crossing' && live && runtime.client && runtime.userId && !practice) {
+      setRuntimeBusy(true);
+      try {
+        const session = await startPracticeSession(runtime.client, {
+          day: 1,
+          clientSessionId: createClientSessionId(runtime.userId),
+          mode: 'canonical',
+          appVersion: '0.1.0-web',
+        });
+        setPractice(session);
+      } catch {
+        setRuntimeError('A sessão canônica não pôde ser iniciada. A travessia permaneceu no limiar.');
+        setRuntimeBusy(false);
+        return;
+      }
+      setRuntimeBusy(false);
+    }
+
     setIndex((value) => Math.min(SCENES.length - 1, value + 1));
   }
+
+  const crownWorld = canon?.world ?? 'ATZILUTH';
+  const crownAngel = canon?.angel ?? 'VEHUIAH';
+  const crownXp = canon?.xp ?? 150;
 
   return (
     <main className={`${styles.shell} ${review.shellReview}`} data-hnk-theme="kether" data-scene={scene.key}>
@@ -68,7 +192,12 @@ export function Day001WebExperience() {
           </div>
           <div className={styles.hudRight}>
             <span>{progress}</span>
-            <small>WEB PROOF · LOCAL STATE</small>
+            <small>{live ? 'WEB LIVE · VAULT FINAL BLOQUEADO' : 'WEB PROOF · LOCAL STATE'}</small>
+            {live ? (
+              <button className={liveStyles.signOut} type="button" onClick={() => void runtime.signOut()}>
+                SAIR DO ÁTRIO
+              </button>
+            ) : null}
           </div>
         </header>
       ) : null}
@@ -88,12 +217,35 @@ export function Day001WebExperience() {
         <p className={styles.body}>{scene.body}</p>
 
         {scene.key === 'crown' ? (
-          <div className={styles.constellation}>
-            <span><small>MUNDO</small>ATZILUTH</span>
-            <span><small>ANJO</small>VEHUIAH</span>
-            <span><small>GRAU</small>NEÓFITO</span>
-            <span><small>XP</small>+150</span>
-          </div>
+          <>
+            <div className={styles.constellation}>
+              <span><small>MUNDO</small>{crownWorld}</span>
+              <span><small>ANJO</small>{crownAngel}</span>
+              <span><small>GRAU</small>NEÓFITO</span>
+              <span><small>XP</small>+{crownXp}</span>
+            </div>
+            <p className={liveStyles.sourceNote}>
+              {live
+                ? canon
+                  ? `CANON LIVE · SOURCE ${canon.sourceSha.slice(0, 12)}`
+                  : 'VALIDANDO CANON LIVE…'
+                : 'PROOF VISUAL · METADADOS DE REFERÊNCIA DO FREEZE'}
+            </p>
+          </>
+        ) : null}
+
+        {scene.key === 'manuscript' && live ? (
+          <p className={liveStyles.sourceNote}>
+            {canon
+              ? `MANUSCRITO VINCULADO AO DATASET CANÔNICO · SOURCE ${canon.sourceSha.slice(0, 12)}`
+              : 'O MANUSCRITO NÃO É DECLARADO LIVE ATÉ O SNAPSHOT SER VALIDADO.'}
+          </p>
+        ) : null}
+
+        {scene.key === 'crossing' && live ? (
+          <p className={liveStyles.sourceNote}>
+            {practice ? `PRACTICE SESSION · ${practice.id.slice(0, 8)}` : 'A PRÓXIMA AÇÃO CRIA UMA PRACTICE SESSION CANÔNICA.'}
+          </p>
         ) : null}
 
         {scene.key === 'relic' ? (
@@ -107,7 +259,10 @@ export function Day001WebExperience() {
         ) : null}
 
         {scene.key === 'intention' ? (
-          <textarea value={intention} onChange={(event) => setIntention(event.target.value)} placeholder="MINHA INTENÇÃO PARA ESTA TRAVESSIA…" className={styles.input} />
+          <>
+            <textarea value={intention} onChange={(event) => setIntention(event.target.value)} placeholder="MINHA INTENÇÃO PARA ESTA TRAVESSIA…" className={styles.input} />
+            {live ? <p className={liveStyles.localOnly}>MEMÓRIA VOLÁTIL DO BROWSER · NÃO PERSISTIDA · NÃO ENVIADA</p> : null}
+          </>
         ) : null}
 
         {scene.key === 'contract' ? (
@@ -125,7 +280,18 @@ export function Day001WebExperience() {
         ) : null}
 
         {scene.key === 'mirror' ? (
-          <textarea value={mirror} onChange={(event) => setMirror(event.target.value)} placeholder="ESCREVA SEM PRESSA…" className={`${styles.input} ${styles.mirror}`} />
+          <>
+            <textarea value={mirror} onChange={(event) => setMirror(event.target.value)} placeholder="ESCREVA SEM PRESSA…" className={`${styles.input} ${styles.mirror}`} />
+            {mirrorSecurityBlocked ? (
+              <div className={liveStyles.securityBoundary} role="status">
+                <strong>SELO WEB BLOQUEADO COM SEGURANÇA</strong>
+                <p>
+                  O browser ainda não possui um keystore/recovery E2EE congelado equivalente ao SecureStore nativo. Este texto permanece somente na memória desta página: não foi persistido, não foi enviado ao Vault e nenhum XP será concedido no Web.
+                </p>
+                <span>CONTINUE NO APP MOBILE PARA CIFRAR E CONCLUIR O DIA 001.</span>
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         {scene.key === 'tree' || scene.key === 'atrium' ? (
@@ -142,9 +308,19 @@ export function Day001WebExperience() {
           </div>
         ) : null}
 
+        {runtimeError ? <p className={liveStyles.runtimeError}>{runtimeError}</p> : null}
+
         {scene.key !== 'atrium' ? (
-          <button type="button" className={styles.cta} onClick={next} disabled={!canAdvance}>
-            {scene.key === 'void' ? 'TOCAR A ORIGEM' : scene.key === 'tree' ? 'PASSAR ADIANTE' : 'CONTINUAR'}
+          <button type="button" className={styles.cta} onClick={() => void advance()} disabled={!canAdvance}>
+            {runtimeBusy
+              ? 'CRIANDO SESSÃO…'
+              : mirrorSecurityBlocked
+                ? 'SELO WEB BLOQUEADO · CONTINUE NO MOBILE'
+                : scene.key === 'void'
+                  ? 'TOCAR A ORIGEM'
+                  : scene.key === 'tree'
+                    ? 'PASSAR ADIANTE'
+                    : 'CONTINUAR'}
           </button>
         ) : (
           <div className={styles.finalState}>KETHER · 001 / 036 · VEHUIAH 1 / 5 · NEÓFITO</div>
@@ -155,7 +331,7 @@ export function Day001WebExperience() {
         <footer className={styles.footer}>
           <span>VISUAL PASS V2</span>
           <span>REDUCED MOTION READY</span>
-          <span>CANON COPY NOT DUPLICATED</span>
+          <span>{live ? 'CANON/SSESSION LIVE · VAULT BLOCKED' : 'CANON COPY NOT DUPLICATED'}</span>
         </footer>
       ) : null}
     </main>
