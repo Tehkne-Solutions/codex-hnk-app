@@ -152,8 +152,8 @@ export const ketherChapterOverview = assertBoardContract({
   outputs: [
     {
       kind: 'board-img',
-      path: 'assets/boards/chapter/kether/v1/kether-chapter-overview.webp',
-      mimeType: 'image/webp',
+      path: 'assets/boards/chapter/kether/v1/kether-chapter-overview.png',
+      mimeType: 'image/png',
     },
     {
       kind: 'board-doc',
