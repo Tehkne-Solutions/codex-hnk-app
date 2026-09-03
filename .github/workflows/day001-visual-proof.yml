@@ -2,12 +2,22 @@ name: HNK Day 001 Visual Proof
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/web/app/day-001/**'
+      - 'packages/ui/**'
+      - 'scripts/export-day001-proof.mjs'
+      - 'scripts/validate-experience-qa.mjs'
+      - 'docs/experience/HNK_EXPERIENCE_QA_GATE_V1.md'
+      - '.github/workflows/day001-visual-proof.yml'
   push:
     branches: [main]
     paths:
       - 'apps/web/app/day-001/**'
       - 'packages/ui/**'
       - 'scripts/export-day001-proof.mjs'
+      - 'scripts/validate-experience-qa.mjs'
+      - 'docs/experience/HNK_EXPERIENCE_QA_GATE_V1.md'
       - '.github/workflows/day001-visual-proof.yml'
 
 permissions:
@@ -16,7 +26,7 @@ permissions:
 jobs:
   export-day001-proof:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       HNK_DAY001_BASE_URL: http://127.0.0.1:3000
       HNK_DAY001_OUT: artifacts/day001
@@ -42,10 +52,11 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Validate shared UI and Day 001 contract
+      - name: Validate Day 001 immersive contract
         run: |
           pnpm validate:ui
           pnpm validate:day001
+          pnpm validate:experience
 
       - name: Build web experience
         run: pnpm --filter @hnk/web build
@@ -66,26 +77,29 @@ jobs:
           cat /tmp/hnk-day001-web.log
           exit 1
 
-      - name: Export origin, Relic Moment and Atrium proofs
+      - name: Export six macroacts and immersive walkthrough
         run: node scripts/export-day001-proof.mjs
 
-      - name: Verify proof artifact
+      - name: Verify immersive proof artifact
         run: |
-          test -s "$HNK_DAY001_OUT/day001-origin-desktop.png"
-          test -s "$HNK_DAY001_OUT/day001-origin-mobile-390.png"
-          test -s "$HNK_DAY001_OUT/day001-relic-desktop.png"
-          test -s "$HNK_DAY001_OUT/day001-relic-mobile-390.png"
-          test -s "$HNK_DAY001_OUT/day001-atrium-desktop.png"
-          test -s "$HNK_DAY001_OUT/day001-atrium-mobile-390.png"
-          test -s "$HNK_DAY001_OUT/day001-atrium.pdf"
+          for act in limiar revelacao jachin boaz meio passagem; do
+            test -s "$HNK_DAY001_OUT/day001-${act}-desktop.png"
+            test -s "$HNK_DAY001_OUT/day001-${act}-mobile-390.png"
+          done
+          test -s "$HNK_DAY001_OUT/day001-immersive-walkthrough-desktop.webm"
           test -s "$HNK_DAY001_OUT/export-manifest.json"
-          grep -q '"experience": "kether-day-001-master"' "$HNK_DAY001_OUT/export-manifest.json"
+          grep -q '"experience": "kether-day-001-immersive-v2"' "$HNK_DAY001_OUT/export-manifest.json"
+          grep -q '"audioStatus": "PRESET_PENDING_NO_AUDIO_TRACK_EXPECTED"' "$HNK_DAY001_OUT/export-manifest.json"
+          grep -q '"visualApproval": "REQUIRES_HUMAN_VIDEO_DEVICE_REVIEW"' "$HNK_DAY001_OUT/export-manifest.json"
+          for act in limiar revelacao jachin boaz meio passagem; do
+            grep -q "\"${act}\"" "$HNK_DAY001_OUT/export-manifest.json"
+          done
           cat "$HNK_DAY001_OUT/export-manifest.json"
 
-      - name: Upload Day 001 visual proof artifact
+      - name: Upload Day 001 immersive visual proof
         uses: actions/upload-artifact@v4
         with:
-          name: hnk-kether-day001-master-proof
+          name: hnk-kether-day001-immersive-v2-proof
           path: artifacts/day001
           if-no-files-found: error
           retention-days: 30
