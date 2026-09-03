@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'packages/vault-interop-vectors/**'
       - 'packages/vault-web-crypto-lab/**'
       - 'apps/web/app/labs/vault-crypto/**'
       - 'scripts/verify-vault-web-crypto-lab.mjs'
@@ -12,6 +13,7 @@ on:
       - '.github/workflows/vault-web-crypto-lab.yml'
   pull_request:
     paths:
+      - 'packages/vault-interop-vectors/**'
       - 'packages/vault-web-crypto-lab/**'
       - 'apps/web/app/labs/vault-crypto/**'
       - 'scripts/verify-vault-web-crypto-lab.mjs'

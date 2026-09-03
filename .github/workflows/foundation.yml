@@ -44,6 +44,9 @@ jobs:
       - name: Validate Web Vault Crypto Lab boundary
         run: pnpm validate:vault-web-crypto
 
+      - name: Validate Native Vault interop contract
+        run: pnpm validate:vault-native-interop
+
       - name: Typecheck
         run: pnpm typecheck
 

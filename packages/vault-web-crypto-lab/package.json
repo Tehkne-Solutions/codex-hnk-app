@@ -13,6 +13,9 @@
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "build": "tsc --noEmit"
   },
+  "dependencies": {
+    "@hnk/vault-interop-vectors": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "~6.0.3"
   }
