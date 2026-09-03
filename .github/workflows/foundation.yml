@@ -38,6 +38,9 @@ jobs:
       - name: Validate Day 001 master slice
         run: pnpm validate:day001
 
+      - name: Validate HNK Experience QA Gate
+        run: pnpm validate:experience
+
       - name: Validate Board Factory
         run: pnpm validate:boards
 
