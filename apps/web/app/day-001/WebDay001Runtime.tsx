@@ -119,21 +119,24 @@ export function WebDay001RuntimeProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!client || typeof window === 'undefined') return;
-    const callback = parseAuthCallbackUrl(window.location.href);
-    if (!callback) return;
+    const parsedCallback = parseAuthCallbackUrl(window.location.href);
+    if (!parsedCallback) return;
 
+    const authClient = client;
+    const callback = parsedCallback;
     let active = true;
+
     async function consumeCallback() {
       try {
         if (callback.kind === 'error') throw new Error(callback.message);
         if (callback.kind === 'tokens') {
-          const { error } = await client.auth.setSession({
+          const { error } = await authClient.auth.setSession({
             access_token: callback.accessToken,
             refresh_token: callback.refreshToken,
           });
           if (error) throw error;
         } else {
-          const { error } = await client.auth.exchangeCodeForSession(callback.code);
+          const { error } = await authClient.auth.exchangeCodeForSession(callback.code);
           if (error) throw error;
         }
         if (active) setMessage(null);
