@@ -4,8 +4,9 @@ import type { HnkSupabaseClient } from './index';
 export type PracticeState = 'active' | 'evidence_pending' | 'complete';
 
 export type SafePracticeMetricValue = number | boolean | null;
-export type SafePracticeMetrics = Record<string, SafePracticeMetricValue>;
-export type SafePracticeEvidence = Record<string, number | boolean | null>;
+export type SafePracticeDraftValue = SafePracticeMetricValue | undefined;
+export type SafePracticeMetrics = Record<string, SafePracticeDraftValue>;
+export type SafePracticeEvidence = Record<string, SafePracticeDraftValue>;
 
 export interface StartPracticeInput {
   day: number;
@@ -69,12 +70,24 @@ function assertClientSessionId(value: string): void {
   if (!value.trim()) throw new Error('client_session_id_required');
 }
 
-function assertSafeRecord(record: Record<string, SafePracticeMetricValue>, label: string): void {
+/**
+ * TypeScript unions can surface keys as `undefined` even when those keys do not
+ * exist on the runtime object. We accept that draft shape, strip undefined
+ * fields, and keep the network/database boundary strictly number/boolean/null.
+ */
+function normalizeSafeRecord(
+  record: Record<string, SafePracticeDraftValue>,
+  label: string,
+): Record<string, SafePracticeMetricValue> {
+  const normalized: Record<string, SafePracticeMetricValue> = {};
   for (const [key, value] of Object.entries(record)) {
     if (!key.trim()) throw new Error(`${label}_key_required`);
+    if (value === undefined) continue;
     const valid = value === null || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value));
     if (!valid) throw new Error(`${label}_must_be_numeric_boolean_or_null`);
+    normalized[key] = value;
   }
+  return normalized;
 }
 
 function toSessionRecord(row: {
@@ -162,10 +175,11 @@ export async function savePracticeRecord(
   if (input.durationSeconds != null && (!Number.isInteger(input.durationSeconds) || input.durationSeconds < 0)) {
     throw new Error('invalid_duration_seconds');
   }
-  assertSafeRecord(input.metrics, 'metrics');
-  assertSafeRecord(input.evidence, 'evidence');
 
-  if (input.readyForCompletion && Object.keys(input.evidence).length === 0) {
+  const metrics = normalizeSafeRecord(input.metrics, 'metrics');
+  const evidence = normalizeSafeRecord(input.evidence, 'evidence');
+
+  if (input.readyForCompletion && Object.keys(evidence).length === 0) {
     throw new Error('evidence_required');
   }
 
@@ -173,8 +187,8 @@ export async function savePracticeRecord(
     .from('practice_sessions')
     .update({
       duration_seconds: input.durationSeconds ?? null,
-      metrics: input.metrics,
-      evidence: input.evidence,
+      metrics,
+      evidence,
       state: input.readyForCompletion ? 'evidence_pending' : 'active',
       ended_at: input.endedAt ?? null,
       local_record_hash: input.localRecordHash ?? null,
