@@ -10,6 +10,7 @@ export * from './kether-cycle01';
 export * from './practice-record';
 export * from './promotion-sync';
 export * from './vault';
+export * from './vault-key-envelopes';
 
 export type HnkSupabaseClient = SupabaseClient<Database>;
 

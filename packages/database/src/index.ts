@@ -1,9 +1,10 @@
+export type { Json } from './database.types';
 export type {
   Database,
   Insert,
-  Json,
   PublicTables,
   Row,
   TableName,
   Update,
-} from './database.types';
+  VaultKeyEnvelopesTable,
+} from './database.vault-key-envelopes.generated';

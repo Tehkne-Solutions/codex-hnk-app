@@ -47,6 +47,9 @@ jobs:
       - name: Validate Native Vault interop contract
         run: pnpm validate:vault-native-interop
 
+      - name: Validate recovery-envelope adapter boundary
+        run: pnpm validate:vault-envelope-adapter
+
       - name: Typecheck
         run: pnpm typecheck
 
