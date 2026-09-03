@@ -14,7 +14,8 @@ This board is the editorial overview surface for Chapter 1 — Kether, Days 1–
 
 - a premium digital magazine/grimoire spread;
 - a responsive coded board in the HNK platform;
-- a future exported `board-img` raster/vector artifact.
+- an exported lossless `board-img` master;
+- a PDF document generated from the same coded source.
 
 It is intentionally distinct from `kether-key-art`.
 
@@ -48,9 +49,17 @@ The final visual export may compress or regroup these fields, but may not invent
 
 ## Render outputs
 
-Planned image path:
+Lossless image master:
 
-`assets/boards/chapter/kether/v1/kether-chapter-overview.webp`
+`assets/boards/chapter/kether/v1/kether-chapter-overview.png`
+
+Document export:
+
+`assets/boards/chapter/kether/v1/kether-chapter-overview.pdf`
+
+Export manifest with dimensions and SHA-256 checksums:
+
+`assets/boards/chapter/kether/v1/export-manifest.json`
 
 Code source:
 
@@ -60,6 +69,16 @@ Document source:
 
 `assets/boards/chapter/kether/v1/README.md`
 
+Renderer:
+
+`apps/web/app/boards/_components/HnkBoardRenderer.tsx`
+
+Export command:
+
+`pnpm export:board -- --id kether-chapter-overview-v1 --route /boards/kether --out assets/boards/chapter/kether/v1`
+
+The export command expects the web app to be available at `HNK_BOARD_BASE_URL` (default `http://127.0.0.1:3000`). The GitHub Actions Board Export workflow builds/starts the app and runs this command automatically.
+
 ## Approval rule
 
-The board remains `structured` until an actual rendered composition is reviewed. A generated image is not `approved` or `published` merely because it exists.
+The board remains `structured` until an actual rendered composition is reviewed. A render becoming available advances the artifact to `rendered`; it does not make it `approved` or `published` automatically.
