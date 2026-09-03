@@ -2,7 +2,7 @@
 
 Asset key: `kether-chapter-overview-v1`
 
-Lifecycle: **structured**
+Lifecycle: **rendered**
 
 Family: `chapter-overview`
 
@@ -79,6 +79,17 @@ Export command:
 
 The export command expects the web app to be available at `HNK_BOARD_BASE_URL` (default `http://127.0.0.1:3000`). The GitHub Actions Board Export workflow builds/starts the app and runs this command automatically.
 
+## First verified render
+
+The first verified deterministic export was produced by GitHub Actions run `33757614148`, artifact `9894117800`.
+
+- PNG dimensions: `1440 × 2449`
+- PNG SHA-256: `d2e136be7e7f3f12265c5c74b7595fe178c8741ab25e682f386219e7753cb5fc`
+- PDF SHA-256: `de1600b9abb89dd8756fc6890e4ee7cca92fb1f7f4326593d0cf90867d7e4ef6`
+- Artifact digest: `sha256:98b41e4b73fdfa106a991ad03f076ed9d90f476253cd162711335be438b3486e`
+
+Visual QA: the PNG and single-page PDF render without clipping or broken layout. The composition is functionally strong, but it remains too close to an editorial dashboard to qualify as final HNK release art. It therefore remains **rendered/generated**, not `approved` or `published`.
+
 ## Approval rule
 
-The board remains `structured` until an actual rendered composition is reviewed. A render becoming available advances the artifact to `rendered`; it does not make it `approved` or `published` automatically.
+A render becoming available advances the artifact to `rendered`; it does not make it `approved` or `published` automatically. The next visual pass must increase the sacred editorial/grimoire character while preserving the structured-data renderer and legibility.
