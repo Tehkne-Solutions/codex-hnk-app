@@ -6,6 +6,7 @@ const required = [
   'apps/mobile/src/features/vault/NativeVaultInteropHarness.ts',
   'apps/mobile/src/app/labs/vault-interop.tsx',
   '.github/workflows/vault-native-android-interop.yml',
+  'scripts/run-vault-native-android-interop.sh',
   'docs/security/HNK_WEB_E2EE_EXECUTABLE_SPEC_V1_CANDIDATE.md',
 ];
 
@@ -20,6 +21,7 @@ const vector = readFileSync('packages/vault-interop-vectors/src/index.ts', 'utf8
 const harness = readFileSync('apps/mobile/src/features/vault/NativeVaultInteropHarness.ts', 'utf8');
 const route = readFileSync('apps/mobile/src/app/labs/vault-interop.tsx', 'utf8');
 const androidWorkflow = readFileSync('.github/workflows/vault-native-android-interop.yml', 'utf8');
+const androidRunner = readFileSync('scripts/run-vault-native-android-interop.sh', 'utf8');
 const mobilePackage = readFileSync('apps/mobile/package.json', 'utf8');
 const webVectors = readFileSync('packages/vault-web-crypto-lab/src/vectors.ts', 'utf8');
 const productionVault = readFileSync('apps/mobile/src/features/vault/vault-crypto.ts', 'utf8');
@@ -44,10 +46,14 @@ const invariants = [
   ['Lab route exposes redacted accessibility evidence', route.includes('native-interop-status-${result.status}') && route.includes("native-interop-check-${check.name}-${check.ok ? 'PASS' : 'FAIL'}")],
   ['Android proof workflow pins emulator action commit', androidWorkflow.includes('ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d') && !androidWorkflow.includes('android-emulator-runner@v2')],
   ['Android proof workflow pins setup-java v5 commit', androidWorkflow.includes('actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961') && !androidWorkflow.includes('actions/setup-java@v4')],
-  ['Android proof custom script remains POSIX-sh compatible at entry', androidWorkflow.includes('script: |\n            set -eu') && !androidWorkflow.includes('pipefail')],
-  ['Android proof executes release native app without Metro', androidWorkflow.includes('expo run:android --variant release --no-bundler')],
-  ['Android proof verifies all four frozen checks through native UI', ['nonce-exact', 'ciphertext-tag-exact', 'checksum-exact', 'decrypt-roundtrip'].every((name) => androidWorkflow.includes(name)) && androidWorkflow.includes('uiautomator dump')],
-  ['Android proof uploads only redacted proof surface', androidWorkflow.includes('hnk-native-vault-android-interop-v1') && androidWorkflow.includes('secrets-captured=NO') && !androidWorkflow.includes('vdkHex') && !androidWorkflow.includes('recoveryRootSecret')],
+  ['Android proof workflow delegates one command to versioned runner', androidWorkflow.includes('script: sh scripts/run-vault-native-android-interop.sh') && !androidWorkflow.includes('script: |')],
+  ['Android runner remains POSIX-sh compatible', androidRunner.includes('#!/usr/bin/env sh') && androidRunner.includes('set -eu') && !androidRunner.includes('pipefail')],
+  ['Android proof builds Release directly through Gradle', androidRunner.includes('./gradlew app:assembleRelease') && !androidRunner.includes('expo run:android')],
+  ['Android proof limits laboratory build to emulator ABI only', androidRunner.includes('-PreactNativeArchitectures=x86_64') && androidRunner.includes('abi=x86_64')],
+  ['Android proof installs the generated release APK explicitly', androidRunner.includes('adb install -r') && androidRunner.includes('app-release.apk')],
+  ['Android proof deep link is a single shell command with explicit package', androidRunner.includes("adb shell am start -W -a android.intent.action.VIEW -d 'hnk:///labs/vault-interop' -p com.tehknesolutions.codexhnk") && !androidRunner.includes('adb shell am start -W \\\n')],
+  ['Android proof verifies all four frozen checks through native UI', ['nonce-exact', 'ciphertext-tag-exact', 'checksum-exact', 'decrypt-roundtrip'].every((name) => androidRunner.includes(name)) && androidRunner.includes('uiautomator dump')],
+  ['Android proof uploads only redacted proof surface', androidWorkflow.includes('hnk-native-vault-android-interop-v1') && androidRunner.includes('secrets-captured=NO') && !androidWorkflow.includes('vdkHex') && !androidRunner.includes('vdkHex') && !androidRunner.includes('recoveryRootSecret')],
   ['Production Native Vault remains independent from public test vectors', !productionVault.includes('@hnk/vault-interop-vectors')],
   ['Day 001 remains disconnected from Native interop harness', !day001.includes('NativeVaultInteropHarness') && !day001.includes('@hnk/vault-interop-vectors')],
   ['Executable spec still treats actual device proof as pending until runtime evidence lands', spec.includes('NATIVE DEVICE VECTOR PROOF = PENDING')],

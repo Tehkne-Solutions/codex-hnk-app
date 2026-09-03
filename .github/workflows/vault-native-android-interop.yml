@@ -11,6 +11,7 @@ on:
       - 'apps/mobile/package.json'
       - 'packages/vault-interop-vectors/**'
       - 'pnpm-lock.yaml'
+      - 'scripts/run-vault-native-android-interop.sh'
       - 'scripts/validate-vault-native-interop.mjs'
       - '.github/workflows/vault-native-android-interop.yml'
 
@@ -66,63 +67,7 @@ jobs:
           arch: x86_64
           profile: pixel_7
           disable-animations: true
-          script: |
-            set -eu
-            mkdir -p artifacts/native-android-interop
-
-            pnpm --filter @hnk/mobile exec expo prebuild --platform android --clean --no-install
-            pnpm --filter @hnk/mobile exec expo run:android --variant release --no-bundler
-
-            adb shell am force-stop com.tehknesolutions.codexhnk
-            adb shell am start -W \
-              -a android.intent.action.VIEW \
-              -d 'hnk:///labs/vault-interop' \
-              com.tehknesolutions.codexhnk
-
-            proof_xml='artifacts/native-android-interop/window.xml'
-            success=0
-            for attempt in $(seq 1 60); do
-              adb shell uiautomator dump /sdcard/hnk-native-interop.xml >/dev/null 2>&1 || true
-              adb pull /sdcard/hnk-native-interop.xml "$proof_xml" >/dev/null 2>&1 || true
-              if [ -f "$proof_xml" ] && grep -q 'content-desc="native-interop-status-PASS"' "$proof_xml"; then
-                success=1
-                break
-              fi
-              sleep 2
-            done
-
-            adb exec-out screencap -p > artifacts/native-android-interop/screen.png || true
-
-            if [ "$success" -ne 1 ]; then
-              echo 'Android native interop did not reach PASS.'
-              if [ -f "$proof_xml" ]; then cat "$proof_xml"; fi
-              exit 1
-            fi
-
-            for check in nonce-exact ciphertext-tag-exact checksum-exact decrypt-roundtrip; do
-              grep -q "content-desc=\"native-interop-check-${check}-PASS\"" "$proof_xml"
-            done
-
-            if grep -q 'native-interop-status-NATIVE_DEVICE_REQUIRED\|native-interop-status-FAIL\|native-interop-check-.*-FAIL' "$proof_xml"; then
-              echo 'Android native interop exposed a failing status.'
-              exit 1
-            fi
-
-            android_release="$(adb shell getprop ro.build.version.release | tr -d '\r')"
-            android_sdk="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
-            cat > artifacts/native-android-interop/proof.txt <<EOF
-            HNK Vault Native Interop Proof V1
-            platform=android
-            android_release=${android_release}
-            android_sdk=${android_sdk}
-            vector=HNK Native-Web vector 001
-            nonce-exact=PASS
-            ciphertext-tag-exact=PASS
-            checksum-exact=PASS
-            decrypt-roundtrip=PASS
-            secrets-captured=NO
-            EOF
-            sha256sum artifacts/native-android-interop/proof.txt artifacts/native-android-interop/window.xml > artifacts/native-android-interop/SHA256SUMS
+          script: sh scripts/run-vault-native-android-interop.sh
 
       - name: Upload redacted Android interop proof
         if: always()
