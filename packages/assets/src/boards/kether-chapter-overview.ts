@@ -8,7 +8,7 @@ export const ketherChapterOverview = assertBoardContract({
   scope: 'chapter',
   scopeId: 'kether',
   version: 1,
-  lifecycle: 'structured',
+  lifecycle: 'rendered',
   title: 'Kether — A Coroa',
   subtitle: 'O Portal da Emanação Primal de Atziluth',
   rangeLabel: 'Dias 1–36',
