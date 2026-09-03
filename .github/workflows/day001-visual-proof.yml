@@ -1,0 +1,98 @@
+name: HNK Day 001 Visual Proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/app/day-001/**'
+      - 'packages/ui/**'
+      - 'scripts/export-day001-proof.mjs'
+      - '.github/workflows/day001-visual-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export-day001-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HNK_DAY001_BASE_URL: http://127.0.0.1:3000
+      HNK_DAY001_OUT: artifacts/day001
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.1.0
+          run_install: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+
+      - name: Install workspace
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Validate shared UI and Day 001 contract
+        run: |
+          pnpm validate:ui
+          pnpm validate:day001
+
+      - name: Build web experience
+        run: pnpm --filter @hnk/web build
+
+      - name: Start web experience
+        run: |
+          pnpm --filter @hnk/web exec next start -H 127.0.0.1 -p 3000 > /tmp/hnk-day001-web.log 2>&1 &
+          echo $! > /tmp/hnk-day001-web.pid
+
+      - name: Wait for Day 001 route
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent "${HNK_DAY001_BASE_URL}/day-001" > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/hnk-day001-web.log
+          exit 1
+
+      - name: Export origin, Relic Moment and Atrium proofs
+        run: node scripts/export-day001-proof.mjs
+
+      - name: Verify proof artifact
+        run: |
+          test -s "$HNK_DAY001_OUT/day001-origin-desktop.png"
+          test -s "$HNK_DAY001_OUT/day001-origin-mobile-390.png"
+          test -s "$HNK_DAY001_OUT/day001-relic-desktop.png"
+          test -s "$HNK_DAY001_OUT/day001-relic-mobile-390.png"
+          test -s "$HNK_DAY001_OUT/day001-atrium-desktop.png"
+          test -s "$HNK_DAY001_OUT/day001-atrium-mobile-390.png"
+          test -s "$HNK_DAY001_OUT/day001-atrium.pdf"
+          test -s "$HNK_DAY001_OUT/export-manifest.json"
+          grep -q '"experience": "kether-day-001-master"' "$HNK_DAY001_OUT/export-manifest.json"
+          cat "$HNK_DAY001_OUT/export-manifest.json"
+
+      - name: Upload Day 001 visual proof artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hnk-kether-day001-master-proof
+          path: artifacts/day001
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Stop web experience
+        if: always()
+        run: |
+          if [ -f /tmp/hnk-day001-web.pid ]; then
+            kill "$(cat /tmp/hnk-day001-web.pid)" || true
+          fi
