@@ -13,7 +13,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "validate:architecture": "node scripts/validate-architecture.mjs",
-    "check": "pnpm validate:architecture && turbo run lint typecheck test"
+    "validate:boards": "node scripts/validate-boards.mjs",
+    "check": "pnpm validate:architecture && pnpm validate:boards && turbo run lint typecheck test"
   },
   "devDependencies": {
     "prettier": "3.9.6",
