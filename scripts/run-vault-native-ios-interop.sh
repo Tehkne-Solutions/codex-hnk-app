@@ -106,8 +106,6 @@ fi
 
 xcrun simctl install "$udid" "$app_path"
 xcrun simctl launch "$udid" "$bundle_id" >/dev/null
-sleep 2
-xcrun simctl openurl "$udid" 'hnk:///labs/vault-interop'
 
 container_path="$(xcrun simctl get_app_container "$udid" "$bundle_id" data)"
 proof_path="$container_path/Documents/$proof_filename"
