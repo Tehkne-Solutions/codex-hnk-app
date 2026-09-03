@@ -8,7 +8,12 @@ export interface HnkBoardRendererProps {
 export function HnkBoardRenderer({ board }: HnkBoardRendererProps) {
   return (
     <main className={styles.page}>
-      <section className={styles.board} aria-label={board.accessibility.alt}>
+      <section
+        className={styles.board}
+        aria-label={board.accessibility.alt}
+        data-hnk-board-id={board.id}
+        data-hnk-board-version={board.version}
+      >
         <header className={styles.hero}>
           <div>
             <p className={styles.eyebrow}>HNK · {board.family.toUpperCase()}</p>
