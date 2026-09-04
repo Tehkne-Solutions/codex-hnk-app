@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const paths = {
   policy: 'docs/experience/HNK_EXPERIENCE_QA_GATE_V1.md',
+  mobileLayout: 'apps/mobile/src/app/_layout.tsx',
   mobileAlias: 'apps/mobile/src/features/kether/Day001LiveVerticalSlice.tsx',
   mobile: 'apps/mobile/src/features/kether/Day001ImmersiveMobileVerticalSlice.tsx',
   nativeRelic: 'apps/mobile/src/features/kether/KetherOriginRelicNative.tsx',
@@ -21,6 +22,7 @@ if (missing.length) {
 }
 
 const policy = readFileSync(paths.policy, 'utf8');
+const mobileLayout = readFileSync(paths.mobileLayout, 'utf8');
 const mobileAlias = readFileSync(paths.mobileAlias, 'utf8');
 const mobile = readFileSync(paths.mobile, 'utf8');
 const nativeRelic = readFileSync(paths.nativeRelic, 'utf8');
@@ -48,6 +50,7 @@ const checks = [
   ['Policy explicitly rejects slide-click-through', policy.includes('frase curta → botão CONTINUAR → nova frase curta')],
   ['Policy requires human video gate', policy.includes('Gate humano para vídeo/review')],
 
+  ['Native root provides safe-area context', mobileLayout.includes("import { SafeAreaProvider } from 'react-native-safe-area-context';") && mobileLayout.includes('<SafeAreaProvider>')],
   ['Native active alias points to immersive V2', mobileAlias.includes('Day001ImmersiveMobileVerticalSlice as Day001LiveVerticalSlice')],
   ['Native active alias does not point to legacy 20-state component', !mobileAlias.includes('Day001MasterVerticalSlice as Day001LiveVerticalSlice')],
   ['Legacy component remains comparison-only', mobileLegacy.includes('const SCENES: Scene[]')],
@@ -65,6 +68,7 @@ const checks = [
 
   ['Native Revelation mounts Origin Lens without seventh macroact', mobile.includes("import { KetherOriginRelicNative } from './KetherOriginRelicNative';") && mobile.includes('<KetherOriginRelicNative reduceMotion={reduceMotion} />') && acts.length === 6],
   ['Native Relic has exactly three pedagogical layers', nativeRelic.includes("label: 'PONTO'") && nativeRelic.includes("label: 'EMANAÇÃO'") && nativeRelic.includes("label: 'EIXO'")],
+  ['Native Relic uses safe-area-context rather than core SafeAreaView', nativeRelic.includes("import { SafeAreaView } from 'react-native-safe-area-context';") && !nativeRelic.match(/\n\s*SafeAreaView,\n\s*ScrollView/)],
   ['Native Relic uses full-screen modal and platform back close', nativeRelic.includes('<Modal') && nativeRelic.includes('presentationStyle="fullScreen"') && nativeRelic.includes('onRequestClose={closeRelic}')],
   ['Native Relic offers optional touch response', nativeRelic.includes('onStagePress') && nativeRelic.includes('onPress={onStagePress}') && nativeRelic.includes('O GESTO NÃO É OBRIGATÓRIO')],
   ['Native Relic preserves reduced motion', nativeRelic.includes("animationType={reduceMotion ? 'none' : 'fade'}") && nativeRelic.includes('if (reduceMotion) return;')],
