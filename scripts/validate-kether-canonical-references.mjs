@@ -48,7 +48,7 @@ if (seed.includes("'hnk.audio.kether_chokmah.transition.v1', 36, 'day', '036', '
 if (!syncDoc.includes('supersedes older `REFERENCE_PENDING` / `CANONICAL_REFERENCE_PENDING`')) {
   throw new Error('sync document must explicitly supersede historical pending markers');
 }
-if (!syncDoc.includes('not an angel/entity detector') || !catalog.includes('entityDetector: false')) {
+if (!syncDoc.includes('angel/entity detector') || !syncDoc.includes('does not infer objective supernatural frequencies') || !catalog.includes('entityDetector: false')) {
   throw new Error('Sintonizador HNK-EP boundary is required');
 }
 
