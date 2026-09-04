@@ -41,6 +41,9 @@ jobs:
       - name: Validate HNK Experience QA Gate
         run: pnpm validate:experience
 
+      - name: Validate HNK Audio Contract V1
+        run: pnpm validate:audio
+
       - name: Validate Board Factory
         run: pnpm validate:boards
 
