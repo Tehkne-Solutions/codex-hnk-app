@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import styles from './kether-origin-relic.module.css';
+import mobileFlowStyles from './kether-origin-relic-mobile-flow.module.css';
 
 const LAYERS = [
   {
@@ -92,14 +93,15 @@ export function KetherOriginRelicLayer() {
 
       {open ? (
         <section
-          className={styles.overlay}
+          className={`${styles.overlay} ${mobileFlowStyles.mobileFlow}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="origin-relic-title"
           data-relic-layer={layer + 1}
+          data-relic-overlay
         >
           <div className={styles.backdrop} aria-hidden="true" />
-          <header className={styles.header}>
+          <header className={styles.header} data-relic-header>
             <div>
               <span>HNK · INSTRUMENTO DE INTERFACE</span>
               <strong>LENTE DA ORIGEM</strong>
@@ -109,11 +111,12 @@ export function KetherOriginRelicLayer() {
             </button>
           </header>
 
-          <div className={styles.chamber}>
+          <div className={styles.chamber} data-relic-chamber>
             <div
               ref={stageRef}
               className={styles.stage}
               data-testid="kether-origin-relic-stage"
+              data-relic-stage
               onPointerMove={handlePointerMove}
               onPointerLeave={() => {
                 stageRef.current?.style.setProperty('--relic-x', '0');
@@ -132,16 +135,16 @@ export function KetherOriginRelicLayer() {
               <div className={styles.layerIndex} aria-hidden="true">{current.roman}</div>
             </div>
 
-            <article className={styles.copy} aria-live="polite">
+            <article className={styles.copy} aria-live="polite" data-relic-copy>
               <p>{current.roman} · {current.label}</p>
               <h2 id="origin-relic-title">{current.title}</h2>
               <div className={styles.rule} />
               <p className={styles.body}>{current.body}</p>
               <div className={styles.instructions}>
                 <span>MOVA CURSOR / TOQUE PARA DESLOCAR O CAMPO</span>
-                <span>ESC FECHA · MOVIMENTO NÃO É OBRIGATÓRIO</span>
+                <span>FECHAR SEMPRE DISPONÍVEL · MOVIMENTO NÃO É OBRIGATÓRIO</span>
               </div>
-              <div className={styles.progress} aria-label={`Camada ${layer + 1} de 3`}>
+              <div className={styles.progress} aria-label={`Camada ${layer + 1} de 3`} data-relic-progress>
                 {LAYERS.map((item, index) => (
                   <button key={item.label} type="button" data-active={index === layer} onClick={() => setLayer(index)} aria-label={`Abrir camada ${index + 1}: ${item.label}`}>
                     <i />
@@ -149,7 +152,7 @@ export function KetherOriginRelicLayer() {
                   </button>
                 ))}
               </div>
-              <div className={styles.actions}>
+              <div className={styles.actions} data-relic-actions>
                 {layer < LAYERS.length - 1 ? (
                   <button type="button" onClick={() => setLayer((value) => Math.min(value + 1, LAYERS.length - 1))}>REVELAR PRÓXIMA CAMADA</button>
                 ) : (
@@ -159,7 +162,7 @@ export function KetherOriginRelicLayer() {
             </article>
           </div>
 
-          <footer className={styles.disclaimer}>
+          <footer className={styles.disclaimer} data-relic-disclaimer>
             <strong>FRONTEIRA HNK-EP</strong>
             <span>Lente da Origem é uma metáfora/instrumento de interface HNK. Não é o Sigilo canônico de Kether, não detecta fenômenos e não constitui prova científica, biomédica ou espiritual externa.</span>
           </footer>
