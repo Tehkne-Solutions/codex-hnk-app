@@ -7,6 +7,9 @@ const paths = {
   mobileLegacy: 'apps/mobile/src/features/kether/Day001MasterVerticalSlice.tsx',
   webPage: 'apps/web/app/day-001/page.tsx',
   web: 'apps/web/app/day-001/Day001ImmersiveExperience.tsx',
+  relic: 'apps/web/app/day-001/KetherOriginRelicLayer.tsx',
+  relicCss: 'apps/web/app/day-001/kether-origin-relic.module.css',
+  transitionsCss: 'apps/web/app/day-001/day001-transitions-v1.module.css',
 };
 
 const missing = Object.values(paths).filter((path) => !existsSync(path));
@@ -22,6 +25,9 @@ const mobile = readFileSync(paths.mobile, 'utf8');
 const mobileLegacy = readFileSync(paths.mobileLegacy, 'utf8');
 const webPage = readFileSync(paths.webPage, 'utf8');
 const web = readFileSync(paths.web, 'utf8');
+const relic = readFileSync(paths.relic, 'utf8');
+const relicCss = readFileSync(paths.relicCss, 'utf8');
+const transitionsCss = readFileSync(paths.transitionsCss, 'utf8');
 
 const acts = ['limiar', 'revelacao', 'jachin', 'boaz', 'meio', 'selo'];
 
@@ -63,6 +69,19 @@ const checks = [
   ['Web has practice, laboratory and reflection', web.includes('<RitualTimer') && web.includes('DISTRAÇÃO') && web.includes('ESPELHO DA ALMA')],
   ['Web has first-spark consequence', web.includes('1 de 36 travessias de Kether') && web.includes('Fragmento I de Vehuiah')],
   ['Web keeps audio unresolved', web.includes('PRESET_PENDING')],
+
+  ['Web route mounts Relic Moment without creating a seventh macroact', webPage.includes('<KetherOriginRelicLayer />') && acts.length === 6],
+  ['Relic exists only in Revelation', relic.includes("activeAct !== 'revelacao'")],
+  ['Relic has exactly three pedagogical layers', relic.includes("label: 'PONTO'") && relic.includes("label: 'EMANAÇÃO'") && relic.includes("label: 'EIXO'")],
+  ['Relic explicitly denies canonical-sigil identity', relic.includes('Não é o Sigilo canônico de Kether')],
+  ['Relic explicitly denies detection/scientific proof', relic.includes('não detecta fenômenos') && relic.includes('prova científica, biomédica')],
+  ['Relic supports pointer/touch response', relic.includes('onPointerMove={handlePointerMove}') && relic.includes('data-testid="kether-origin-relic-stage"')],
+  ['Relic supports Escape close', relic.includes("event.key === 'Escape'")],
+  ['Relic CSS preserves reduced motion', relicCss.includes('@media (prefers-reduced-motion: reduce)')],
+
+  ['Transition choreography is data-act driven', transitionsCss.includes("main[data-act='revelacao']") && transitionsCss.includes("main[data-act='jachin']") && transitionsCss.includes("main[data-act='boaz']") && transitionsCss.includes("main[data-act='meio']") && transitionsCss.includes("main[data-act='selo']")],
+  ['Transitions preserve reduced motion', transitionsCss.includes('@media (prefers-reduced-motion: reduce)') && transitionsCss.includes('animation: none !important')],
+  ['Web page mounts transition layer', webPage.includes('transitionStyles.transitions')],
 
   ['Both surfaces expose HNK-EP boundary', mobile.includes('HNK-EP') && web.includes('HNK-EP')],
   ['Both surfaces state scientific/biomedical distinction', mobile.includes('afirmação científica ou biomédica') && web.includes('afirmação científica ou biomédica')],
