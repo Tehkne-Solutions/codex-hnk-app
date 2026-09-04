@@ -44,6 +44,9 @@ jobs:
       - name: Validate HNK Audio Contract V1
         run: pnpm validate:audio
 
+      - name: Validate Kether canonical references
+        run: pnpm validate:kether-references
+
       - name: Validate Board Factory
         run: pnpm validate:boards
 
