@@ -37,6 +37,8 @@ const C = ketherTokens.color;
 
 type Props = {
   reduceMotion: boolean;
+  initialOpen?: boolean;
+  initialLayer?: 0 | 1 | 2;
 };
 
 type StageSize = {
@@ -44,9 +46,9 @@ type StageSize = {
   height: number;
 };
 
-export function KetherOriginRelicNative({ reduceMotion }: Props) {
-  const [open, setOpen] = useState(false);
-  const [layer, setLayer] = useState(0);
+export function KetherOriginRelicNative({ reduceMotion, initialOpen = false, initialLayer = 0 }: Props) {
+  const [open, setOpen] = useState(initialOpen);
+  const [layer, setLayer] = useState<number>(initialLayer);
   const [stageSize, setStageSize] = useState<StageSize>({ width: 1, height: 1 });
   const [fieldOffset, setFieldOffset] = useState({ x: 0, y: 0 });
 
