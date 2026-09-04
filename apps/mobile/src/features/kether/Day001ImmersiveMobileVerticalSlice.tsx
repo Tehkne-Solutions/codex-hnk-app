@@ -21,6 +21,7 @@ import { hnkRhythm, ketherTokens } from '@hnk/ui';
 import { useHnkAuth } from '../auth/AuthContext';
 import { encryptVaultText } from '../vault/vault-crypto';
 import { loadDay001Snapshot, type Day001Snapshot } from './day001-data';
+import { KetherOriginRelicNative } from './KetherOriginRelicNative';
 
 type MacroAct = 'limiar' | 'revelacao' | 'jachin' | 'boaz' | 'meio' | 'selo';
 type SyncState = 'idle' | 'starting' | 'sealing' | 'sealed' | 'demo' | 'error';
@@ -323,6 +324,7 @@ export function Day001ImmersiveMobileVerticalSlice() {
                 Experiência espiritual, símbolo tradicional e sensação subjetiva permanecem distinguíveis de afirmação científica ou biomédica.
               </Text>
             </View>
+            <KetherOriginRelicNative reduceMotion={reduceMotion} />
             <PrimaryAction label="ABRIR O MANUSCRITO" onPress={() => setAct('jachin')} />
           </Panel>
         ) : null}

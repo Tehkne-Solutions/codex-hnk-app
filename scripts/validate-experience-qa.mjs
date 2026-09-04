@@ -4,6 +4,7 @@ const paths = {
   policy: 'docs/experience/HNK_EXPERIENCE_QA_GATE_V1.md',
   mobileAlias: 'apps/mobile/src/features/kether/Day001LiveVerticalSlice.tsx',
   mobile: 'apps/mobile/src/features/kether/Day001ImmersiveMobileVerticalSlice.tsx',
+  nativeRelic: 'apps/mobile/src/features/kether/KetherOriginRelicNative.tsx',
   mobileLegacy: 'apps/mobile/src/features/kether/Day001MasterVerticalSlice.tsx',
   webPage: 'apps/web/app/day-001/page.tsx',
   web: 'apps/web/app/day-001/Day001ImmersiveExperience.tsx',
@@ -22,6 +23,7 @@ if (missing.length) {
 const policy = readFileSync(paths.policy, 'utf8');
 const mobileAlias = readFileSync(paths.mobileAlias, 'utf8');
 const mobile = readFileSync(paths.mobile, 'utf8');
+const nativeRelic = readFileSync(paths.nativeRelic, 'utf8');
 const mobileLegacy = readFileSync(paths.mobileLegacy, 'utf8');
 const webPage = readFileSync(paths.webPage, 'utf8');
 const web = readFileSync(paths.web, 'utf8');
@@ -60,6 +62,15 @@ const checks = [
   ['Native does not create off-grid rhythm token r18', !mobile.includes('R.r18')],
   ['Native keeps audio unresolved instead of inventing preset', mobile.includes('PRESET_PENDING')],
   ['Native keeps Day 005 Fragment boundary', mobile.includes('Fragmento I de Vehuiah') && mobile.includes('Dia 005')],
+
+  ['Native Revelation mounts Origin Lens without seventh macroact', mobile.includes("import { KetherOriginRelicNative } from './KetherOriginRelicNative';") && mobile.includes('<KetherOriginRelicNative reduceMotion={reduceMotion} />') && acts.length === 6],
+  ['Native Relic has exactly three pedagogical layers', nativeRelic.includes("label: 'PONTO'") && nativeRelic.includes("label: 'EMANAÇÃO'") && nativeRelic.includes("label: 'EIXO'")],
+  ['Native Relic uses full-screen modal and platform back close', nativeRelic.includes('<Modal') && nativeRelic.includes('presentationStyle="fullScreen"') && nativeRelic.includes('onRequestClose={closeRelic}')],
+  ['Native Relic offers optional touch response', nativeRelic.includes('onStagePress') && nativeRelic.includes('onPress={onStagePress}') && nativeRelic.includes('O GESTO NÃO É OBRIGATÓRIO')],
+  ['Native Relic preserves reduced motion', nativeRelic.includes("animationType={reduceMotion ? 'none' : 'fade'}") && nativeRelic.includes('if (reduceMotion) return;')],
+  ['Native Relic explicitly denies canonical-sigil identity', nativeRelic.includes('Não é o Sigilo canônico de Kether')],
+  ['Native Relic explicitly denies detection/scientific proof', nativeRelic.includes('não detecta fenômenos') && nativeRelic.includes('prova científica, biomédica')],
+  ['Native Relic does not add audio or haptics', !nativeRelic.includes('expo-av') && !nativeRelic.includes('expo-audio') && !nativeRelic.includes('Haptics') && !nativeRelic.includes('Vibration')],
 
   ['Web route points to immersive V2', webPage.includes('<Day001ImmersiveExperience />') && !webPage.includes('<Day001WebExperience />')],
   ['Web visible grammar is six macroacts', tokensInOrder(web, acts) && web.includes('Mapa ritual do Dia 001')],
