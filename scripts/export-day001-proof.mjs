@@ -32,7 +32,7 @@ const demoDistractions = [
 
 async function waitForAct(page, actId) {
   await page.locator(`main[data-act="${actId}"]`).waitFor({ state: 'visible' });
-  await page.waitForTimeout(120);
+  await page.waitForTimeout(220);
 }
 
 async function clickButton(page, name) {
@@ -44,6 +44,31 @@ async function clickButton(page, name) {
 async function enterRevelation(page) {
   await clickButton(page, /ATRAVESSAR O LIMIAR/);
   await waitForAct(page, 'revelacao');
+}
+
+async function openRelicAtLayer3(page) {
+  await clickButton(page, /ABRIR LENTE DA ORIGEM/);
+  const dialog = page.getByRole('dialog', { name: /Concentre a origem|Observe a expansão|Organize a passagem/ });
+  await dialog.waitFor({ state: 'visible' });
+  await page.waitForTimeout(480);
+  const stage = page.getByTestId('kether-origin-relic-stage');
+  const box = await stage.boundingBox();
+  if (box) {
+    await page.mouse.move(box.x + box.width * .25, box.y + box.height * .35);
+    await page.waitForTimeout(320);
+  }
+  await clickButton(page, /REVELAR PRÓXIMA CAMADA/);
+  await page.waitForTimeout(560);
+  if (box) await page.mouse.move(box.x + box.width * .72, box.y + box.height * .6);
+  await clickButton(page, /REVELAR PRÓXIMA CAMADA/);
+  await page.getByText('Organize a passagem.').waitFor({ state: 'visible' });
+  await page.waitForTimeout(720);
+}
+
+async function closeRelic(page) {
+  await clickButton(page, /RETORNAR À REVELAÇÃO/);
+  await page.getByRole('dialog').waitFor({ state: 'detached' });
+  await page.waitForTimeout(300);
 }
 
 async function enterJachin(page) {
@@ -135,43 +160,48 @@ async function recordWalkthrough(browser, outputs) {
 
   await clickButton(page, /ATRAVESSAR O LIMIAR/);
   await waitForAct(page, 'revelacao');
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(1000);
 
   for (const key of ['Fehu', 'Hexagrama 1', 'O Louco']) {
     await clickButton(page, new RegExp(key));
-    await page.waitForTimeout(650);
+    await page.waitForTimeout(720);
   }
+
+  await openRelicAtLayer3(page);
+  await page.waitForTimeout(900);
+  await closeRelic(page);
+  await page.waitForTimeout(650);
 
   await clickButton(page, /ABRIR O MANUSCRITO/);
   await waitForAct(page, 'jachin');
-  await page.waitForTimeout(1100);
+  await page.waitForTimeout(1200);
   await page.mouse.wheel(0, 520);
   await page.waitForTimeout(700);
   await startAndPauseTimer(page, 'FOCO DE JACHIN');
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(700);
 
   await clickButton(page, /CONTRAIR A FORÇA/);
   await waitForAct(page, 'boaz');
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(1050);
   await page.mouse.wheel(0, 680);
   await startAndPauseTimer(page, 'RELAXAMENTO · BOAZ');
   await fillDistractions(page);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(950);
 
   await clickButton(page, /CONVERGIR OS PILARES/);
   await waitForAct(page, 'meio');
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(1050);
   await clickButton(page, /PRATICAR SEM GRAVAR/);
-  await page.waitForTimeout(850);
+  await page.waitForTimeout(900);
   await prepareMiddleForSeal(page);
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(700);
 
   await clickButton(page, /PREPARAR O SELO/);
   await waitForAct(page, 'selo');
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1350);
   await clickButton(page, /TESTEMUNHAR A PRIMEIRA CENTELHA/);
   await page.getByText('Agora existe uma luz.').waitFor({ state: 'visible' });
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(1900);
 
   await page.close();
   await context.close();
@@ -183,7 +213,7 @@ async function recordWalkthrough(browser, outputs) {
   await writeFile(videoPath, bytes);
   outputs.push({
     kind: 'day001-immersive-walkthrough',
-    scene: 'full-journey',
+    scene: 'full-journey-with-origin-lens',
     target: 'desktop-1440x900',
     format: 'webm',
     path: videoPath,
@@ -218,19 +248,47 @@ try {
     }
   }
 
+  for (const mode of [
+    { key: 'desktop', viewport: { width: 1600, height: 1200 } },
+    { key: 'mobile-390', viewport: { width: 390, height: 844 } },
+  ]) {
+    const { context, page } = await preparePage(browser, mode.viewport, true);
+    await enterRevelation(page);
+    await openRelicAtLayer3(page);
+    const path = resolve(outputDirectory, `day001-relic-origin-lens-${mode.key}.png`);
+    await page.screenshot({ path, type: 'png', fullPage: false, animations: 'disabled' });
+    outputs.push({
+      kind: 'day001-relic-proof',
+      scene: 'origin-lens-layer-3',
+      label: 'Lente da Origem',
+      target: mode.key,
+      format: 'png',
+      path,
+      sha256: await sha256(path),
+    });
+    await context.close();
+  }
+
   await recordWalkthrough(browser, outputs);
 
   const manifest = {
-    schemaVersion: '2.0',
+    schemaVersion: '2.1',
     experience: 'kether-day-001-immersive-v2',
     route: '/day-001',
     sourceUrl: targetUrl,
     exportedAt: new Date().toISOString(),
     renderer: 'playwright/chromium',
     macroacts: acts.map((act) => act.id),
+    relicMoment: {
+      id: 'origin-lens-v1',
+      layers: ['point', 'emanation', 'axis'],
+      status: 'CANDIDATE_CREATOR_REVIEW_PENDING',
+      canonicalSigil: false,
+    },
     screenshotReducedMotion: true,
     walkthroughReducedMotion: false,
     audioStatus: 'PRESET_PENDING_NO_AUDIO_TRACK_EXPECTED',
+    audioContract: 'HNK_AUDIO_PRESET_CONTRACT_V1_NO_RITUAL_PRESET_PUBLISHED',
     visualApproval: 'REQUIRES_HUMAN_VIDEO_DEVICE_REVIEW',
     outputs,
   };
