@@ -26,9 +26,10 @@ capture_layer() {
 
   xml="$artifact_dir/layer-${layer}-${suffix}.xml"
   png="$artifact_dir/layer-${layer}-${suffix}.png"
+  deep_link="hnk:///labs/day001-origin-lens?${query}"
 
   adb shell am force-stop "$package"
-  adb shell am start -W -a android.intent.action.VIEW -d "hnk:///labs/day001-origin-lens?${query}" -p "$package" >/dev/null
+  adb shell "am start -W -a android.intent.action.VIEW -d '${deep_link}' -p '${package}'" >/dev/null
 
   success=0
   attempt=1
