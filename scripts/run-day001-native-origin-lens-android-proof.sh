@@ -26,9 +26,10 @@ capture_layer() {
 
   xml="$artifact_dir/layer-${layer}-${suffix}.xml"
   png="$artifact_dir/layer-${layer}-${suffix}.png"
+  deep_link="hnk:///labs/day001-origin-lens?${query}"
 
   adb shell am force-stop "$package"
-  adb shell am start -W -a android.intent.action.VIEW -d "hnk:///labs/day001-origin-lens?${query}" -p "$package" >/dev/null
+  adb shell "am start -W -a android.intent.action.VIEW -d '${deep_link}' -p '${package}'" >/dev/null
 
   success=0
   attempt=1
@@ -56,13 +57,39 @@ capture_layer() {
   test -s "$png"
   grep -q 'HNK · INSTRUMENTO DE INTERFACE' "$xml"
   grep -q 'Fechar Lente da Origem' "$xml"
-  grep -q 'FRONTEIRA HNK-EP' "$xml"
+}
+
+verify_ep_boundary() {
+  xml="$artifact_dir/hnk-ep-boundary.xml"
+  found=0
+  attempt=1
+
+  while [ "$attempt" -le 8 ]; do
+    adb shell input swipe 540 2050 540 500 500 >/dev/null 2>&1 || true
+    sleep 1
+    adb shell uiautomator dump /sdcard/hnk-origin-lens-ep.xml >/dev/null 2>&1 || true
+    adb pull /sdcard/hnk-origin-lens-ep.xml "$xml" >/dev/null 2>&1 || true
+    if [ -f "$xml" ] && grep -q 'FRONTEIRA HNK-EP' "$xml"; then
+      found=1
+      break
+    fi
+    attempt=$((attempt + 1))
+  done
+
+  if [ "$found" -ne 1 ]; then
+    echo 'Origin Lens HNK-EP boundary did not become accessible after scrolling.'
+    if [ -f "$xml" ]; then
+      cat "$xml"
+    fi
+    exit 1
+  fi
 }
 
 capture_layer 1 motion
 capture_layer 2 motion
 capture_layer 3 motion
 capture_layer 3 reduced
+verify_ep_boundary
 
 android_release="$(adb shell getprop ro.build.version.release | tr -d '\r')"
 android_sdk="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
@@ -81,6 +108,8 @@ route=/labs/day001-origin-lens
 proof_mode_env=EXPO_PUBLIC_HNK_NATIVE_VISUAL_PROOF
 layers=1,2,3
 reduced_motion_layer=3
+safe_area=react-native-safe-area-context
+hnk_ep_boundary=PASS_AFTER_SCROLL
 canonical_sigilo=NO
 ritual_audio=NONE
 persistent_user_data=NONE
