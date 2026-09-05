@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'apps/mobile/src/features/vault/NativeVaultInteropHarness.ts'
+      - 'apps/mobile/src/app/index.tsx'
       - 'apps/mobile/src/app/labs/vault-interop.tsx'
       - 'apps/mobile/app.json'
       - 'apps/mobile/package.json'
