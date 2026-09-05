@@ -1,11 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 
+const recoveryMigrationPath = 'supabase/migrations/20260905011011_add_vault_key_envelopes.sql';
+
 const required = [
   'packages/database/src/database.vault-key-envelopes.generated.ts',
   'packages/supabase-client/src/vault-key-envelopes.ts',
   'packages/supabase-client/src/vault-key-envelopes.test.ts',
   'packages/supabase-client/src/index.ts',
-  'supabase/migrations/20260903152500_add_vault_key_envelopes.sql',
+  recoveryMigrationPath,
   'supabase/tests/vault_key_envelopes.sql',
   'apps/web/app/day-001/Day001WebExperience.tsx',
   'apps/mobile/src/features/kether/Day001MasterVerticalSlice.tsx',
@@ -22,7 +24,7 @@ const generated = readFileSync('packages/database/src/database.vault-key-envelop
 const adapter = readFileSync('packages/supabase-client/src/vault-key-envelopes.ts', 'utf8');
 const adapterTest = readFileSync('packages/supabase-client/src/vault-key-envelopes.test.ts', 'utf8');
 const clientIndex = readFileSync('packages/supabase-client/src/index.ts', 'utf8');
-const migration = readFileSync('supabase/migrations/20260903152500_add_vault_key_envelopes.sql', 'utf8');
+const migration = readFileSync(recoveryMigrationPath, 'utf8');
 const pgTap = readFileSync('supabase/tests/vault_key_envelopes.sql', 'utf8');
 const webDay001 = readFileSync('apps/web/app/day-001/Day001WebExperience.tsx', 'utf8');
 const mobileDay001 = readFileSync('apps/mobile/src/features/kether/Day001MasterVerticalSlice.tsx', 'utf8');
