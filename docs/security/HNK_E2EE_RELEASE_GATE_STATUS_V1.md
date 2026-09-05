@@ -1,18 +1,20 @@
 # HNK E2EE — Release Gate Status V1
 
-**Status:** ENGINEERING CANDIDATE · WEB WRITES STILL BLOCKED  
-**Date:** 2026-09-03  
-**Current validated head:** `51819fdf356a0405e2f4295cd2fc89484915bd2a`
+**Status:** ENGINEERING CANDIDATE · CRYPTO + ENVELOPE SUBSTRATE GREEN · WEB WRITES STILL BLOCKED  
+**Updated:** 2026-09-05
 
 ## 1. Executive state
 
-The HNK Vault E2EE work now has three deliberately separated layers:
+The HNK Vault E2EE work has four deliberately separated layers:
 
 1. **Web Crypto Lab** — cryptographic primitives + recovery/device envelopes + IndexedDB proof;
 2. **Server Recovery Envelope Store** — ciphertext/key-envelope persistence with owner-only RLS;
-3. **Native Expo Interop Harness** — actual `expo-crypto` contract harness for Android/iOS using the same frozen vector as Web.
+3. **Typed Recovery Adapter** — authenticated persistence API in `@hnk/supabase-client`;
+4. **Native Expo Interop Harness** — actual `expo-crypto` contract harness for Android/iOS using the same frozen vector as Web.
 
-None of these layers currently enables Day 001 Web Vault persistence, Practice Record finalization or XP completion.
+The first three layers are implemented and validated. The fourth is source/build green but still requires physical Android and iOS runtime evidence.
+
+None of these layers authorizes Day 001 Web Vault persistence, Practice Record finalization or XP completion.
 
 `DAY 001 WEB VAULT WRITES = BLOCKED`
 
@@ -20,166 +22,78 @@ None of these layers currently enables Day 001 Web Vault persistence, Practice R
 
 ## 2. Web cryptography gate — GREEN
 
-Implementation package:
-
-`@hnk/vault-web-crypto-lab`
-
-Shared deterministic vector:
-
-`@hnk/vault-interop-vectors`
+Implementation package: `@hnk/vault-web-crypto-lab`  
+Shared deterministic vector: `@hnk/vault-interop-vectors`
 
 Proved in Node/WebCrypto and Chromium:
 
 - AES-256-GCM journal payload;
-- 12-byte nonce;
-- 16-byte GCM tag;
+- 12-byte nonce / 16-byte GCM tag;
 - Native-compatible AAD format;
 - HKDF-SHA-256 recovery KEK;
 - AES-KW-256 VDK wrapping;
 - non-extractable Device KEK;
 - IndexedDB structured-clone of non-extractable `CryptoKey`;
 - recovery to a second device envelope;
-- wrong RRS rejection;
-- wrong user recovery-context rejection;
+- wrong RRS/context rejection;
 - ciphertext/AAD tamper rejection;
-- no Vault/RRS material in localStorage/sessionStorage;
+- no Vault/RRS material in Web Storage;
 - database-dump fixture alone insufficient for plaintext recovery.
 
-Latest proof after the shared-vector refactor:
+Frozen format: `docs/security/HNK_WEB_E2EE_EXECUTABLE_SPEC_V1_CANDIDATE.md`.
 
-```text
-workflow = HNK Web Vault Crypto Lab
-run = 33772091792
-head = 92adae0ea5c04049b8c98620281af63869834efa
-artifact = 9900104144
-artifact digest = sha256:3af1594eefbe21582485670a721a031fae2e9e549d80fe0017ceabd394e245f0
-result = PASS
-```
+## 3. Recovery envelope database gate — HOSTED GREEN
 
-The later head `51819fdf...` changes only the semantic Native validator rule and does not alter the Web crypto implementation/vector.
+Repository/hosted migration identity:
 
-## 3. Recovery envelope database gate — GREEN
+`supabase/migrations/20260905011011_add_vault_key_envelopes.sql`
 
-Migration:
+Hosted project: `czgqjrxkveatlnyjiwds`  
+Table: `public.vault_key_envelopes`
 
-`supabase/migrations/20260903152500_add_vault_key_envelopes.sql`
-
-Table:
-
-`public.vault_key_envelopes`
-
-Server persistence accepts only recovery envelope material:
-
-- `wrapped_key`;
-- `AES-KW-256`;
-- `HKDF-SHA-256`;
-- recovery salt;
-- key version / KDF info version;
-- rotation/revocation metadata.
-
-It has no plaintext, RRS, raw VDK or device-key column.
-
-Security behavior:
+Verified on 2026-09-05:
 
 - RLS enabled;
-- owner-only SELECT;
-- owner-only INSERT;
-- owner-only UPDATE;
-- owner-only DELETE;
-- ownership reassignment rejected;
-- cross-user write/delete rejected;
+- owner-only SELECT/INSERT/UPDATE/DELETE;
 - one active recovery envelope per key version;
-- revoked envelope can be replaced;
-- unapproved wrap algorithm rejected;
-- unapproved KDF rejected;
-- device-envelope material rejected by schema.
+- `AES-KW-256` wrapping constraint;
+- `HKDF-SHA-256` KDF constraint;
+- no plaintext/RRS/raw-VDK/device-key column.
 
-Latest Foundation proof:
+The migration had been green locally but absent from the hosted project. That drift was corrected and the repository migration version was aligned to hosted migration history. See `docs/security/HNK_VAULT_RECOVERY_HOSTED_RECONCILIATION_V1.md`.
 
-```text
-workflow = HNK Platform Foundation
-run = 33772195307
-head = 51819fdf356a0405e2f4295cd2fc89484915bd2a
-validate/build = SUCCESS
-Kether P0 DB Acceptance = SUCCESS
-pgTAP = SUCCESS
-real concurrency proof = SUCCESS
-```
+## 4. Typed recovery-envelope adapter — GREEN
 
-The `vault_key_envelopes.sql` pgTAP file contributes 20 dedicated VKE assertions.
+Implementation: `packages/supabase-client/src/vault-key-envelopes.ts`.
 
-## 4. Native interoperability contract gate — SOURCE/BUILD GREEN
+Supported operations:
 
-Shared vector source:
+- save an already-wrapped recovery envelope;
+- list the authenticated user's recovery envelopes;
+- get the active recovery envelope;
+- revoke an active recovery envelope.
 
-`packages/vault-interop-vectors/src/index.ts`
+Its public write input has no RRS, plaintext, raw VDK or raw device-key field. `user_id` is resolved from the authenticated session, with RLS remaining the server-side ownership boundary.
 
-Native harness:
+Adapter unit tests and the Foundation validator are green.
 
-`apps/mobile/src/features/vault/NativeVaultInteropHarness.ts`
+## 5. Native interoperability contract — SOURCE/BUILD GREEN
 
-Manual native lab route:
+Shared vector: `packages/vault-interop-vectors/src/index.ts`  
+Native harness: `apps/mobile/src/features/vault/NativeVaultInteropHarness.ts`  
+Manual route: `/labs/vault-interop`
 
-`/labs/vault-interop`
+The harness is isolated from the production Vault key lifecycle, Supabase persistence, Practice Records and XP. It uses the actual Expo Crypto contract to reproduce the frozen Native↔Web AES-GCM vector and refuses Web as native evidence.
 
-The harness is isolated from:
-
-- SecureStore production Vault key lifecycle;
-- Supabase;
-- `journal_vault`;
-- `vault_key_envelopes`;
-- Practice Record;
-- completion / XP;
-- Day 001 runtime.
-
-The harness uses the actual Expo Crypto API contract to:
-
-1. import the frozen 256-bit VDK;
-2. supply the exact frozen base64 AAD;
-3. supply the exact frozen 12-byte nonce;
-4. encrypt with AES-GCM and 16-byte tag;
-5. retrieve ciphertext with tag appended;
-6. compare nonce exactly;
-7. compare ciphertext+tag exactly;
-8. compare SHA-256 checksum exactly;
-9. decrypt and verify round-trip.
-
-The harness refuses Web as native evidence and returns `NATIVE_DEVICE_REQUIRED` unless `Platform.OS` is Android or iOS.
-
-Foundation gate:
-
-```text
-Native Vault interop static invariants = PASS
-workspace typecheck = PASS
-workspace tests = PASS
-workspace build = PASS
-```
-
-## 5. Native physical/runtime gate — PENDING
-
-This is the remaining interoperability proof:
+## 6. Native physical/runtime gate — PENDING
 
 `ANDROID FROZEN VECTOR PASS = PENDING`
 
 `IOS FROZEN VECTOR PASS = PENDING`
 
-A PASS must come from the `/labs/vault-interop` route running under an actual Android or iOS Expo/React Native runtime. Expo Web, Node and Chromium are explicitly insufficient evidence.
+A PASS must come from the native lab running under an actual Android or iOS Expo/React Native runtime. Captured evidence must be redacted and never include raw VDK, RRS, private prose or authenticated production secrets.
 
-Required captured evidence is redacted:
-
-```text
-platform
-app/runtime version
-vector id
-nonce-exact = true
-ciphertext-tag-exact = true
-checksum-exact = true
-decrypt-roundtrip = true
-```
-
-Never capture the raw VDK, RRS, private prose or authenticated production secrets.
-
-## 6. Production-origin security gate — PENDING
+## 7. Production-origin security gate — PENDING
 
 Before enabling browser Vault persistence:
 
@@ -192,33 +106,33 @@ Before enabling browser Vault persistence:
 - recovery UX smoke without logging RRS;
 - browser storage-loss/recovery test on hosted origin.
 
-## 7. Application integration gate — NOT STARTED BY DESIGN
+Vercel repo-side Node runtime is pinned to Node 22.x; Git-driven production deployment hardening remains tracked in Issue #19.
 
-The following remain absent from the Day 001 Web experience:
+## 8. Recovery product semantics — PENDING APPROVAL
 
-- Web E2EE package import;
-- recovery-envelope adapter calls;
-- `saveEncryptedVaultEntry()`;
-- final `savePracticeRecord()`;
-- `completeCodexDay()`;
-- XP grant after Web mirror.
+The engineering candidate is implementation-backed, but Issue #12 still requires explicit product/security approval for:
 
-The authenticated Web experience must continue to stop at the Mirror until the release gates above are green and an explicit integration pass is performed.
+- user-held Recovery Root Secret model;
+- lost-device warning/copy;
+- multi-device enrollment semantics;
+- recovery-envelope rotation;
+- data-key rotation semantics;
+- local-device enrollment deletion/revocation wording.
 
-## 8. Next safe implementation step
+Implementation existence is not treated as approval of recovery UX or threat-model semantics.
 
-The next code step can be the **typed recovery-envelope persistence adapter** in `@hnk/supabase-client`, still unreferenced by Day 001.
+## 9. Application integration gate — BLOCKED BY DESIGN
 
-Its API must accept only:
+Do not enable production Web `saveEncryptedVaultEntry()`, recovery enrollment from Day 001, final Practice Record, `completeCodexDay()` or XP grant until the remaining release gates are green.
 
-- key version;
-- wrapped VDK;
-- wrap algorithm;
-- KDF algorithm;
-- KDF salt;
-- KDF info version;
-- revocation/rotation intent.
+## 10. Current safe next steps
 
-Its public TypeScript input must have no RRS, plaintext, raw key or raw VDK property.
+1. capture Android native frozen-vector evidence;
+2. capture iOS native frozen-vector evidence;
+3. complete Git-driven hosted origin hardening (#19);
+4. review/approve recovery UX and threat-model semantics (#12);
+5. execute hosted storage-loss → recovery proof;
+6. execute decrypt-after-recovery release QA;
+7. only then perform the explicit Day 001 Web Vault integration pass.
 
-After that adapter is typechecked/tested, the remaining non-automatable gate is Android/iOS execution of the shared frozen vector.
+**Current result:** cryptographic format, hosted database substrate and typed persistence adapter are green; physical native evidence, hosted-origin security and recovery product approval remain the release boundary.
