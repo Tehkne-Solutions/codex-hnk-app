@@ -106,8 +106,8 @@ fi
 
 xcrun simctl install "$udid" "$app_path"
 # CI autorun is compiled into the app and HomeScreen redirects internally to the
-# isolated Lab route. Avoid simctl openurl: recent iOS Simulator versions show a
-# human confirmation alert for custom URL schemes, which makes the proof flaky.
+# isolated Lab route. Avoid external custom-scheme navigation because recent iOS
+# Simulator versions show a human confirmation alert that makes the proof flaky.
 xcrun simctl launch --terminate-running "$udid" "$bundle_id" >/dev/null
 
 container_path="$(xcrun simctl get_app_container "$udid" "$bundle_id" data)"
